@@ -1,11 +1,17 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using MyPet.BLL.Interfaces;
+using MyPet.BLL.Services;
+using MyPet.DAL.EF;
+using MyPet.DAL.Interfaces;
+using MyPet.DAL.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,7 +31,13 @@ namespace MyPet.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddScoped<IAdvertisementService, AdvertisementService>();
+            services.AddScoped<IAdvertisementRepository, AdvertisementRepository>();
 
+            services.AddDbContext<AppDbContext>(options =>
+            {
+                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
+            });
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
