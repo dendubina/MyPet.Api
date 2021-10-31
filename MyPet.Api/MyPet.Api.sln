@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31702.278
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyPet.Api", "MyPet.Api\MyPet.Api.csproj", "{3553C593-53F5-4DB0-B7C0-1D2E3A628A68}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyPet.BLL", "MyPet.BLL\MyPet.BLL.csproj", "{7776726A-032E-40BD-AA6E-1992FF66474F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyPet.DAL", "MyPet.DAL\MyPet.DAL.csproj", "{81BC8493-D61B-44FA-AD2D-E46CA2503F1A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3553C593-53F5-4DB0-B7C0-1D2E3A628A68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3553C593-53F5-4DB0-B7C0-1D2E3A628A68}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3553C593-53F5-4DB0-B7C0-1D2E3A628A68}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3553C593-53F5-4DB0-B7C0-1D2E3A628A68}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7776726A-032E-40BD-AA6E-1992FF66474F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7776726A-032E-40BD-AA6E-1992FF66474F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7776726A-032E-40BD-AA6E-1992FF66474F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7776726A-032E-40BD-AA6E-1992FF66474F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81BC8493-D61B-44FA-AD2D-E46CA2503F1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81BC8493-D61B-44FA-AD2D-E46CA2503F1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81BC8493-D61B-44FA-AD2D-E46CA2503F1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81BC8493-D61B-44FA-AD2D-E46CA2503F1A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9A4848CB-6193-4D72-A199-3526C43F1DED}
+	EndGlobalSection
+EndGlobal
