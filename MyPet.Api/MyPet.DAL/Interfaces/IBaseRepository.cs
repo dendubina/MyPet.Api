@@ -9,7 +9,7 @@ namespace MyPet.DAL.Interfaces
     public interface IBaseRepository<TEntity>
          where TEntity : class
     {
-        void Add(TEntity entity);
+        Task AddAsync(TEntity entity);
         Task<TEntity> GetById(int id);
         void Delete(int id);
         Task<IEnumerable<TEntity>> GetAll();

@@ -29,9 +29,6 @@ namespace MyPet.DAL.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PetName")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime>("PublicationDate")
                         .HasColumnType("datetime2");
 
@@ -43,7 +40,7 @@ namespace MyPet.DAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Advertisement");
+                    b.ToTable("Advertisements");
                 });
 
             modelBuilder.Entity("MyPet.DAL.Entities.Image", b =>
@@ -66,7 +63,52 @@ namespace MyPet.DAL.Migrations
 
                     b.HasIndex("AdvertisementId");
 
-                    b.ToTable("Image");
+                    b.ToTable("Images");
+                });
+
+            modelBuilder.Entity("MyPet.DAL.Entities.Location", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int>("PetId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Street")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Town")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PetId")
+                        .IsUnique();
+
+                    b.ToTable("Locations");
+                });
+
+            modelBuilder.Entity("MyPet.DAL.Entities.Pet", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int>("AdId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdId")
+                        .IsUnique();
+
+                    b.ToTable("Pets");
                 });
 
             modelBuilder.Entity("MyPet.DAL.Entities.Image", b =>
@@ -80,9 +122,38 @@ namespace MyPet.DAL.Migrations
                     b.Navigation("Advertisement");
                 });
 
+            modelBuilder.Entity("MyPet.DAL.Entities.Location", b =>
+                {
+                    b.HasOne("MyPet.DAL.Entities.Pet", "Pet")
+                        .WithOne("Location")
+                        .HasForeignKey("MyPet.DAL.Entities.Location", "PetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Pet");
+                });
+
+            modelBuilder.Entity("MyPet.DAL.Entities.Pet", b =>
+                {
+                    b.HasOne("MyPet.DAL.Entities.Advertisement", "Advertisement")
+                        .WithOne("Pet")
+                        .HasForeignKey("MyPet.DAL.Entities.Pet", "AdId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Advertisement");
+                });
+
             modelBuilder.Entity("MyPet.DAL.Entities.Advertisement", b =>
                 {
                     b.Navigation("Images");
+
+                    b.Navigation("Pet");
+                });
+
+            modelBuilder.Entity("MyPet.DAL.Entities.Pet", b =>
+                {
+                    b.Navigation("Location");
                 });
 #pragma warning restore 612, 618
         }

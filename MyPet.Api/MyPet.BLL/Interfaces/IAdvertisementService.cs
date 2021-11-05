@@ -9,9 +9,9 @@ namespace MyPet.BLL.Interfaces
 {
     public interface IAdvertisementService
     {
-        void AddAdvertisement(AdvertisementDTO model);
-        IEnumerable<AdvertisementDTO> GetAllAdvertisements();
-        AdvertisementDTO GetAdvertisementById(int id);
+        Task AddAdvertisementAsync(AdvertisementDTO model);
+        Task<IEnumerable<AdvertisementDTO>> GetAllAdvertisementsAsync();
+        Task<AdvertisementDTO> GetAdvertisementByIdAsync(int id);
         AdvertisementDTO UpdateAdvertisement(int id, AdvertisementDTO advertisementDTO);
         void DeleteAdvertisement(int id);
     }

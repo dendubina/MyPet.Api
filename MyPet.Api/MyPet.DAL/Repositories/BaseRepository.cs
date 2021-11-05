@@ -21,7 +21,7 @@ namespace MyPet.DAL.Repositories
             settedEntity = this.context.Set<TEntity>();
         }
 
-        public async void Add(TEntity entity)
+        public async Task AddAsync(TEntity entity)
         {
             await settedEntity.AddAsync(entity);
             context.SaveChanges();

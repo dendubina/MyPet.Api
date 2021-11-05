@@ -11,9 +11,9 @@ namespace MyPet.BLL.DTO
         public int Id { get; set; }
         public string UserId { get; set; }
         public string UserName { get; set; }
-        public DateTime PublicationDate { get; set; }
-        public string PetName { get; set; }
+        public DateTime PublicationDate { get; set; }       
         public string Description { get; set; }
         public List<ImageDTO> Images { get; set; }
+        public PetDTO Pet { get; set; }
     }
 }

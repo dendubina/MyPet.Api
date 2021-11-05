@@ -1,4 +1,5 @@
-﻿using MyPet.BLL.DTO;
+﻿using AutoMapper;
+using MyPet.BLL.DTO;
 using MyPet.BLL.Interfaces;
 using MyPet.DAL.Entities;
 using MyPet.DAL.Interfaces;
@@ -14,93 +15,43 @@ namespace MyPet.BLL.Services
     public class AdvertisementService : IAdvertisementService
     {
         private readonly IAdvertisementRepository adRepo;
+        private readonly IMapper mapper;
 
-        public AdvertisementService(IAdvertisementRepository adRepo )
+        public AdvertisementService(IAdvertisementRepository adRepo, IMapper mapper)
         {
             this.adRepo = adRepo;
+            this.mapper = mapper;
         }
 
-        public void AddAdvertisement(AdvertisementDTO model)
+        public async Task AddAdvertisementAsync(AdvertisementDTO model)
         {
-            var ad = new Advertisement()
+            Pet pet = mapper.Map<Pet>(model.Pet);            
+
+            Advertisement ad = new Advertisement
             {
                 UserId = model.UserId,
                 UserName = model.UserName,
-                PetName = model.PetName,
                 Description = model.Description,
                 PublicationDate = DateTime.Now,
-                Images = new List<Image>(),
-            };
+                Pet = pet,
+                Images = mapper.Map<List<ImageDTO>,List<Image>>(model.Images),
+            };            
 
-            foreach(var image in model.Images)
-            {
-                var img = new Image
-                {
-                    Path = image.Path,
-                    Size = image.Size,
-                };
-                ad.Images.Add(img);
-            }
-
-            adRepo.Add(ad);
+           await adRepo.AddAsync(ad);
         }
         
-        public AdvertisementDTO GetAdvertisementById(int id)
+        public async Task<AdvertisementDTO> GetAdvertisementByIdAsync(int id)
         {
-            var ad = adRepo.GetById(id);
+            var ad = await adRepo.GetById(id);           
 
-            AdvertisementDTO adDTO = new AdvertisementDTO
-            {
-                Id = ad.Result.Id,
-                UserId = ad.Result.UserId,
-                UserName = ad.Result.UserName,
-                PetName = ad.Result.PetName,
-                Description = ad.Result.Description,
-                Images = new List<ImageDTO>(),
-            };
-
-            foreach(var img in ad.Result.Images)
-            {
-                adDTO.Images.Add(new ImageDTO
-                {
-                    Path = img.Path,
-                    Size = img.Size,
-                });
-            }
-
-            return adDTO;
+            return mapper.Map<AdvertisementDTO>(ad);
         }
 
-        public IEnumerable<AdvertisementDTO> GetAllAdvertisements()
+        public async Task<IEnumerable<AdvertisementDTO>> GetAllAdvertisementsAsync()
         {
-            var ads = adRepo.GetAll().Result;
-            List<AdvertisementDTO> dtoList = new List<AdvertisementDTO>();
+            var ads = await adRepo.GetAll();
 
-            foreach(var ad in ads)
-            {
-                var dto = new AdvertisementDTO
-                {
-                    Id = ad.Id,
-                    Description = ad.Description,
-                    PetName = ad.PetName,
-                    PublicationDate = ad.PublicationDate,
-                    UserId = ad.UserId,
-                    UserName = ad.UserName,
-                    Images = new List<ImageDTO>(),
-                };
-
-                foreach(var img in ad.Images)
-                {
-                    dto.Images.Add(new ImageDTO {
-                        Path = img.Path,
-                        Size = img.Size,
-                    });
-                }
-
-                dtoList.Add(dto);
-            }
-
-            return dtoList;
+            return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(ads);           
         }
 
         public AdvertisementDTO UpdateAdvertisement(int id, AdvertisementDTO advertisementDTO)
