@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -23,18 +24,22 @@ namespace MyPet.Api.Controllers
         private readonly ILogger<AdvertisementController> _logger;
         private readonly IAdvertisementService adService;
         private readonly IMapper mapper;
+        private readonly IWebHostEnvironment webHostEnvironment;
 
-        public AdvertisementController(ILogger<AdvertisementController> logger, IAdvertisementService adservice, IMapper mapper)
+        public AdvertisementController(ILogger<AdvertisementController> logger, IAdvertisementService adservice, IMapper mapper, IWebHostEnvironment env)
         {
             _logger = logger;
             this.adService = adservice;
             this.mapper = mapper;
+            webHostEnvironment = env;
         }
 
         [HttpPut]
         public async Task<IActionResult> AddAdvertisementAsync([FromForm]AdvertisementModel model)
         {
-            string folderToSave = Path.Combine(Directory.GetCurrentDirectory(), "Resourses", "Images");
+            // string folderToSave = Path.Combine(Directory.GetCurrentDirectory(), "Resourses", "Images");
+            string ImagesFolder = "/Images/";
+            string folderToSave = webHostEnvironment.WebRootPath + ImagesFolder;
             long size = model.Images.Sum(f => f.Length);
 
             LocationDTO locDto = new LocationDTO
@@ -71,7 +76,7 @@ namespace MyPet.Api.Controllers
 
                     admodel.Images.Add(new ImageDTO {
                         Size = formFile.Length,
-                        Path = fullpath,
+                        Path = ImagesFolder + filename,
                     });
 
                     using (var stream = System.IO.File.Create(fullpath))

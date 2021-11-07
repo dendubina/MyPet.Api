@@ -44,6 +44,7 @@ namespace MyPet.Api
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "MyPet.Api", Version = "v1" });
             });
+            services.AddCors(options => options.AddDefaultPolicy(config => config.AllowAnyOrigin()));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -57,6 +58,8 @@ namespace MyPet.Api
             }
 
             app.UseRouting();
+            app.UseCors();
+            app.UseStaticFiles();
 
             app.UseAuthorization();
 
