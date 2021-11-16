@@ -35,7 +35,7 @@ namespace MyPet.DAL.Repositories
         }
 
         public async Task<TEntity> GetById(int id)
-        {
+        {            
             return await settedEntity.FindAsync(id);
         }
 

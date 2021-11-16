@@ -2,11 +2,11 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MyPet.Api.Models;
 using MyPet.BLL.DTO;
 using MyPet.BLL.Interfaces;
-
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -25,35 +25,49 @@ namespace MyPet.Api.Controllers
         private readonly IAdvertisementService adService;
         private readonly IMapper mapper;
         private readonly IWebHostEnvironment webHostEnvironment;
+        private readonly IConfiguration config;
 
-        public AdvertisementController(ILogger<AdvertisementController> logger, IAdvertisementService adservice, IMapper mapper, IWebHostEnvironment env)
+        public AdvertisementController(ILogger<AdvertisementController> logger, IAdvertisementService adservice, IMapper mapper, IWebHostEnvironment env, IConfiguration config)
         {
             _logger = logger;
             this.adService = adservice;
             this.mapper = mapper;
             webHostEnvironment = env;
+            this.config = config;
         }
 
         [HttpPut]
         public async Task<IActionResult> AddAdvertisementAsync([FromForm]AdvertisementModel model)
         {
-            // string folderToSave = Path.Combine(Directory.GetCurrentDirectory(), "Resourses", "Images");
-            string ImagesFolder = "/Images/";
+            string[] supportedTypes = new[] { "bmp", "png", "jpg", "jpeg", };
+            string imgext = Path.GetExtension(model.Image.FileName).Substring(1);
+            string ImagesFolder = config["ImagesFolder"];
             string folderToSave = webHostEnvironment.WebRootPath + ImagesFolder;
-            long size = model.Images.Sum(f => f.Length);
+
+            if (!supportedTypes.Contains(imgext))
+            {
+                ModelState.AddModelError("Image", "Wrong file extension");
+                return ValidationProblem(ModelState);
+            }
+            else if (model.Image.Length > (1048576 * Convert.ToInt32(config["MaxImageSizeMB"]))) //1MB * 5
+            {
+                ModelState.AddModelError("Image", $"Image size should be less than {config["MaxImageSizeMB"]}MB");
+                return ValidationProblem(ModelState);
+            }
+
+            
+           
 
             LocationDTO locDto = new LocationDTO
             {
                 Town = model.LocationTown,
                 Street = model.LocationStreet,
             };
-
             PetDTO petDto = new PetDTO
             {
                 Name = model.PetName,
                 Location = locDto,
             };
-
             AdvertisementDTO admodel = new AdvertisementDTO
             {
                 UserId = model.UserId,
@@ -63,32 +77,41 @@ namespace MyPet.Api.Controllers
                 Images = new List<ImageDTO>(),
             };
 
-            foreach (var formFile in model.Images)
+           
+            string filename = Path.GetRandomFileName();
+            filename = Path.GetFileNameWithoutExtension(filename);
+            filename = filename + Path.GetExtension(model.Image.FileName);
+            string fullpath = Path.Combine(folderToSave, filename);
+            admodel.Images.Add(new ImageDTO
             {
-                if (formFile.Length > 0)
-                {
-                    string filename = Path.GetRandomFileName();
-                    filename = Path.GetFileNameWithoutExtension(filename);
-                    filename = filename + Path.GetExtension(formFile.FileName);
+                Size = model.Image.Length,
+                Path = ImagesFolder + filename,
+            });
 
-
-                    string fullpath = Path.Combine(folderToSave, filename);
-
-                    admodel.Images.Add(new ImageDTO {
-                        Size = formFile.Length,
-                        Path = ImagesFolder + filename,
-                    });
-
-                    using (var stream = System.IO.File.Create(fullpath))
-                    {
-                        await formFile.CopyToAsync(stream);
-                    }
-                }
+            using (var stream = System.IO.File.Create(fullpath))
+            {
+                await model.Image.CopyToAsync(stream);
             }
 
-           await adService.AddAdvertisementAsync(admodel);
 
-            return new ObjectResult(new { imagesCount = model.Images.Count, size }) { StatusCode = StatusCodes.Status201Created };
+            //  await adService.AddAdvertisementAsync(admodel);
+
+            var responseModel = new
+            {                
+                UserId = model.UserId,
+                UserName = model.UserName,
+                PublicationDate = DateTime.Now,
+                Description = model.Description,
+                LocationStreet = model.LocationStreet,
+                LocationTown = model.LocationTown,
+                PetName = model.PetName,
+                ImagePath = ImagesFolder + filename,
+                ImageSize = model.Image.Length,
+                status = 201,
+            };
+
+              return new ObjectResult(responseModel) { StatusCode = StatusCodes.Status201Created };
+           
         }
 
         [HttpGet]
