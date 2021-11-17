@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -37,6 +38,7 @@ namespace MyPet.Api.Controllers
         }
 
         [HttpPut]
+        [Authorize]
         public async Task<IActionResult> AddAdvertisementAsync([FromForm] AdvertisementModel model)
         {
             string[] supportedTypes = new[] { "bmp", "png", "jpg", "jpeg", };
