@@ -37,7 +37,7 @@ namespace MyPet.Api.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> AddAdvertisementAsync([FromForm]AdvertisementModel model)
+        public async Task<IActionResult> AddAdvertisementAsync([FromForm] AdvertisementModel model)
         {
             string[] supportedTypes = new[] { "bmp", "png", "jpg", "jpeg", };
             string imgext = Path.GetExtension(model.Image.FileName).Substring(1);
@@ -55,8 +55,8 @@ namespace MyPet.Api.Controllers
                 return ValidationProblem(ModelState);
             }
 
-            
-           
+
+
 
             LocationDTO locDto = new LocationDTO
             {
@@ -77,7 +77,7 @@ namespace MyPet.Api.Controllers
                 Images = new List<ImageDTO>(),
             };
 
-           
+
             string filename = Path.GetRandomFileName();
             filename = Path.GetFileNameWithoutExtension(filename);
             filename = filename + Path.GetExtension(model.Image.FileName);
@@ -94,10 +94,10 @@ namespace MyPet.Api.Controllers
             }
 
 
-            //  await adService.AddAdvertisementAsync(admodel);
+              await adService.AddAdvertisementAsync(admodel);
 
             var responseModel = new
-            {                
+            {
                 UserId = model.UserId,
                 UserName = model.UserName,
                 PublicationDate = DateTime.Now,
@@ -110,12 +110,12 @@ namespace MyPet.Api.Controllers
                 status = 201,
             };
 
-              return new ObjectResult(responseModel) { StatusCode = StatusCodes.Status201Created };
-           
+            return new ObjectResult(responseModel) { StatusCode = StatusCodes.Status201Created };
+
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAdvertisementByIdAsync([Required]int id)
+        public async Task<IActionResult> GetAdvertisementByIdAsync([Required] int id)
         {
             var ad = await adService.GetAdvertisementByIdAsync(id);
             var result = mapper.Map<AdvertisementResponseModel>(ad);
@@ -124,7 +124,7 @@ namespace MyPet.Api.Controllers
                 return new ObjectResult(result);
             else
                 ModelState.AddModelError("id", "Ad not found");
-                return ValidationProblem(ModelState);
+            return ValidationProblem(ModelState);
         }
 
         [HttpGet]
@@ -133,7 +133,19 @@ namespace MyPet.Api.Controllers
             var ads = await adService.GetAllAdvertisementsAsync();
 
             var result = mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
-                       
+
+            if (result.Count() > 0)
+                return Ok(result);
+            else
+                return BadRequest();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAdsPagedList([FromQuery] AdPagedRequestParameters parameters)
+        {
+            var ads = await adService.GetPagedAdvertisementsAsync(parameters.PageNumber, parameters.PageSize);
+            var result = mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
+
             if (result.Count() > 0)
                 return Ok(result);
             else

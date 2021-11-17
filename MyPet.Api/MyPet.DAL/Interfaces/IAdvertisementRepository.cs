@@ -9,6 +9,6 @@ namespace MyPet.DAL.Interfaces
 {
     public interface IAdvertisementRepository : IBaseRepository<Advertisement>
     {
-
+        Task<IEnumerable<Advertisement>> GetPagedListAsync(int pageNumber, int pageSize);
     }
 }

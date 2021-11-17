@@ -38,8 +38,7 @@ namespace MyPet.BLL.Services
             };            
 
            await adRepo.AddAsync(ad);
-        }
-        
+        }        
         public async Task<AdvertisementDTO> GetAdvertisementByIdAsync(int id)
         {
             var ad = await adRepo.GetById(id);           
@@ -50,17 +49,26 @@ namespace MyPet.BLL.Services
         public async Task<IEnumerable<AdvertisementDTO>> GetAllAdvertisementsAsync()
         {
             var ads = await adRepo.GetAll();
+            var result = ads.OrderByDescending(x => x.PublicationDate);
 
-            return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(ads);           
+            return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(result);           
         }
 
         public AdvertisementDTO UpdateAdvertisement(int id, AdvertisementDTO advertisementDTO)
         {
             throw new NotImplementedException();
         }
+
         public void DeleteAdvertisement(int id)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<IEnumerable<AdvertisementDTO>> GetPagedAdvertisementsAsync(int pageNumber, int pageSize)
+        {
+            var ads = await adRepo.GetPagedListAsync(pageNumber, pageSize);
+
+            return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(ads);
         }
     }
 }

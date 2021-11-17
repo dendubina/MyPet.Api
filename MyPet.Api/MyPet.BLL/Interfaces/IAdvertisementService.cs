@@ -14,5 +14,6 @@ namespace MyPet.BLL.Interfaces
         Task<AdvertisementDTO> GetAdvertisementByIdAsync(int id);
         AdvertisementDTO UpdateAdvertisement(int id, AdvertisementDTO advertisementDTO);
         void DeleteAdvertisement(int id);
+        Task<IEnumerable<AdvertisementDTO>> GetPagedAdvertisementsAsync(int pageNumber, int pageSize);
     }
 }

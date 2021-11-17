@@ -1,4 +1,5 @@
-﻿using MyPet.DAL.EF;
+﻿using Microsoft.EntityFrameworkCore;
+using MyPet.DAL.EF;
 using MyPet.DAL.Entities;
 using MyPet.DAL.Interfaces;
 using System;
@@ -11,10 +12,24 @@ namespace MyPet.DAL.Repositories
 {
     public class AdvertisementRepository : BaseRepository<Advertisement>, IAdvertisementRepository
     {
+       
         public AdvertisementRepository(AppDbContext context) : base(context)
         {
-
+            
         }
+
+        public async Task<IEnumerable<Advertisement>> GetPagedListAsync(int pageNumber, int pageSize)
+        {
+            return await context.Advertisements
+                .Include(x => x.Images)
+                .Include(x => x.Pet).ThenInclude(x => x.Location)
+                .OrderByDescending(x => x.PublicationDate)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .AsNoTracking()
+                .ToListAsync();            
+        }
+
         public override Advertisement Update(int id, Advertisement entity)
         {
             throw new NotImplementedException();
