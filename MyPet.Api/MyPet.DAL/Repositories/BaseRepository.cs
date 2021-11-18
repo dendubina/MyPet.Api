@@ -27,19 +27,22 @@ namespace MyPet.DAL.Repositories
             context.SaveChanges();
         }
 
-        public async void Delete(int id)
+        public async Task<TEntity> DeleteAsync(int id)
         {
             TEntity entity = await settedEntity.FindAsync(id);
+
             settedEntity.Remove(entity);
             context.SaveChanges();
+
+            return entity;
         }
 
-        public async Task<TEntity> GetById(int id)
+        public async Task<TEntity> GetByIdAsync(int id)
         {            
             return await settedEntity.FindAsync(id);
         }
 
-        public async Task<IEnumerable<TEntity>> GetAll()
+        public async Task<IEnumerable<TEntity>> GetAllAsync()
         {
             return await context.Set<TEntity>().ToListAsync();
         }

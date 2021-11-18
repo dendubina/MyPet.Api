@@ -10,9 +10,9 @@ namespace MyPet.DAL.Interfaces
          where TEntity : class
     {
         Task AddAsync(TEntity entity);
-        Task<TEntity> GetById(int id);
-        void Delete(int id);
-        Task<IEnumerable<TEntity>> GetAll();
+        Task<TEntity> GetByIdAsync(int id);
+        Task<TEntity> DeleteAsync(int id);
+        Task<IEnumerable<TEntity>> GetAllAsync();
         TEntity Update(int id, TEntity entity);
     }
 }

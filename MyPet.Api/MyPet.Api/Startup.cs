@@ -108,7 +108,7 @@ namespace MyPet.Api
                 options.Password.RequireUppercase = false;
             });
 
-            services.AddHttpContextAccessor();
+            
 
             services.AddCors(options => options.AddDefaultPolicy(config => config
             .AllowAnyOrigin()

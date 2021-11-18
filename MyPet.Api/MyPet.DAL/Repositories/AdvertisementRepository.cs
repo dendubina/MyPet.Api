@@ -18,6 +18,17 @@ namespace MyPet.DAL.Repositories
             
         }
 
+        public async Task<IEnumerable<Advertisement>> GetAdsByUserAsync(string userId)
+        {
+            return await context.Advertisements
+                .Where(x => x.UserId == userId)
+                .Include(x => x.Images)
+                .Include(x => x.Pet).ThenInclude(x => x.Location)
+                .OrderByDescending(x => x.PublicationDate)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<Advertisement>> GetPagedListAsync(int pageNumber, int pageSize)
         {
             return await context.Advertisements
@@ -28,6 +39,19 @@ namespace MyPet.DAL.Repositories
                 .Take(pageSize)
                 .AsNoTracking()
                 .ToListAsync();            
+        }
+
+        public async Task<IEnumerable<Advertisement>> GetPagedListByUserAsync(string userId, int pageNumber, int pageSize)
+        {
+            return await context.Advertisements
+                .Where(x => x.UserId == userId)
+                .Include(x => x.Images)
+                .Include(x => x.Pet).ThenInclude(x => x.Location)
+                .OrderByDescending(x => x.PublicationDate)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .AsNoTracking()
+                .ToListAsync();
         }
 
         public override Advertisement Update(int id, Advertisement entity)

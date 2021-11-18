@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -14,6 +15,7 @@ using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace MyPet.Api.Controllers
@@ -27,19 +29,21 @@ namespace MyPet.Api.Controllers
         private readonly IMapper mapper;
         private readonly IWebHostEnvironment webHostEnvironment;
         private readonly IConfiguration config;
+        private readonly UserManager<IdentityUser> UserManager;
 
-        public AdvertisementController(ILogger<AdvertisementController> logger, IAdvertisementService adservice, IMapper mapper, IWebHostEnvironment env, IConfiguration config)
+        public AdvertisementController(ILogger<AdvertisementController> logger, IAdvertisementService adservice, IMapper mapper, IWebHostEnvironment env, IConfiguration config, UserManager<IdentityUser> UserManager)
         {
             _logger = logger;
             this.adService = adservice;
             this.mapper = mapper;
             webHostEnvironment = env;
             this.config = config;
+            this.UserManager = UserManager;
         }
 
         [HttpPut]
         [Authorize]
-        public async Task<IActionResult> AddAdvertisementAsync([FromForm] AdvertisementModel model)
+        public async Task<IActionResult> AddAdvertisement([FromForm] AdvertisementModel model)
         {
             string[] supportedTypes = new[] { "bmp", "png", "jpg", "jpeg", };
             string imgext = Path.GetExtension(model.Image.FileName).Substring(1);
@@ -117,7 +121,7 @@ namespace MyPet.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAdvertisementByIdAsync([Required] int id)
+        public async Task<IActionResult> GetAdvertisementById([Required] int id)
         {
             var ad = await adService.GetAdvertisementByIdAsync(id);
             var result = mapper.Map<AdvertisementResponseModel>(ad);
@@ -130,7 +134,7 @@ namespace MyPet.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllAdvertisementsAsync()
+        public async Task<IActionResult> GetAllAdvertisements()
         {
             var ads = await adService.GetAllAdvertisementsAsync();
 
@@ -153,6 +157,71 @@ namespace MyPet.Api.Controllers
             else
                 return BadRequest();
         }
-    }
 
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> GetAdsByUser()
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
+            var user = await UserManager.FindByIdAsync(userId);            
+
+            if (user == null) {
+                return BadRequest();
+            }
+            
+             var ads = await adService.GetAdsByUserAsync(userId);
+             var result = mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
+
+
+            if (result.Count() > 0)
+                return Ok(result);
+            else
+                return BadRequest();
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> GetUsersAdsPagedList([FromQuery] AdPagedRequestParameters parameters)
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
+            var user = await UserManager.FindByIdAsync(userId);
+
+            if (user == null)
+            {
+                return BadRequest();
+            }
+
+            var ads = await adService.GetPagedAdsByUserAsync(userId, parameters.PageNumber, parameters.PageSize);
+            var result = mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
+
+            if (result.Count() > 0)
+                return Ok(result);
+            else
+                return BadRequest();
+        }
+
+        [HttpDelete]
+        [Authorize]
+        public async Task<IActionResult> DeleteAdvertisement([Required] int id)
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
+            var user = await UserManager.FindByIdAsync(userId);
+            var ad = await adService.GetAdvertisementByIdAsync(id);
+
+            if(user == null || ad == null || userId != ad.UserId)
+            {
+                ModelState.AddModelError("error", "something went wrong");
+                return ValidationProblem(ModelState);
+            }
+
+            var deletedAd = await adService.DeleteAdvertisementAsync(id);
+
+            /*using (var stream = System.IO.File.Delete(fullpath))
+            {
+                await(stream);
+            }*/
+
+            return Ok(deletedAd);
+        }
+    }
 }
