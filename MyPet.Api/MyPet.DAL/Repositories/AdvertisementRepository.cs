@@ -54,9 +54,23 @@ namespace MyPet.DAL.Repositories
                 .ToListAsync();
         }
 
-        public override Advertisement Update(int id, Advertisement entity)
+        public override async Task<Advertisement> Update(int id, Advertisement entity)
         {
-            throw new NotImplementedException();
+            var ad = await context.Advertisements.FindAsync(id);
+
+            if(entity.Images.Count() > 0)
+            {
+                ad.Images = entity.Images;
+            }
+
+            ad.Description = entity.Description;
+            ad.Pet.Name = entity.Pet.Name;
+            ad.Pet.Location.Town = entity.Pet.Location.Town;
+            ad.Pet.Location.Street = entity.Pet.Location.Street;
+
+            context.SaveChanges();
+
+            return ad;
         }
     }
 }

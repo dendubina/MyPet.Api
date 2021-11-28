@@ -45,24 +45,7 @@ namespace MyPet.Api.Controllers
         [Authorize]
         public async Task<IActionResult> AddAdvertisement([FromForm] AdvertisementModel model)
         {
-            string[] supportedTypes = new[] { "bmp", "png", "jpg", "jpeg", };
-            string imgext = Path.GetExtension(model.Image.FileName).Substring(1);
-            string ImagesFolder = config["ImagesFolder"];
-            string folderToSave = webHostEnvironment.WebRootPath + ImagesFolder;
-
-            if (!supportedTypes.Contains(imgext))
-            {
-                ModelState.AddModelError("Image", "Wrong file extension");
-                return ValidationProblem(ModelState);
-            }
-            else if (model.Image.Length > (1048576 * Convert.ToInt32(config["MaxImageSizeMB"]))) //1MB * 5
-            {
-                ModelState.AddModelError("Image", $"Image size should be less than {config["MaxImageSizeMB"]}MB");
-                return ValidationProblem(ModelState);
-            }
-
-
-
+            string fullpath = await AddImageGetPath(model.Image);
 
             LocationDTO locDto = new LocationDTO
             {
@@ -82,25 +65,14 @@ namespace MyPet.Api.Controllers
                 Pet = petDto,
                 Images = new List<ImageDTO>(),
             };
-
-
-            string filename = Path.GetRandomFileName();
-            filename = Path.GetFileNameWithoutExtension(filename);
-            filename = filename + Path.GetExtension(model.Image.FileName);
-            string fullpath = Path.Combine(folderToSave, filename);
             admodel.Images.Add(new ImageDTO
             {
                 Size = model.Image.Length,
-                Path = ImagesFolder + filename,
-            });
-
-            using (var stream = System.IO.File.Create(fullpath))
-            {
-                await model.Image.CopyToAsync(stream);
-            }
+                Path = fullpath,
+            });            
 
 
-              await adService.AddAdvertisementAsync(admodel);
+            await adService.AddAdvertisementAsync(admodel);
 
             var responseModel = new
             {
@@ -111,7 +83,7 @@ namespace MyPet.Api.Controllers
                 LocationStreet = model.LocationStreet,
                 LocationTown = model.LocationTown,
                 PetName = model.PetName,
-                ImagePath = ImagesFolder + filename,
+                ImagePath = fullpath,
                 ImageSize = model.Image.Length,
                 status = 201,
             };
@@ -214,14 +186,76 @@ namespace MyPet.Api.Controllers
                 return ValidationProblem(ModelState);
             }
 
-            var deletedAd = await adService.DeleteAdvertisementAsync(id);
-
-            /*using (var stream = System.IO.File.Delete(fullpath))
-            {
-                await(stream);
-            }*/
+            var deletedAd = await adService.DeleteAdvertisementAsync(id);            
 
             return Ok(deletedAd);
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> UpdateAdvertisement([FromForm] UpdatedAdvertisementModel model)
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
+            var user = await UserManager.FindByIdAsync(userId);
+            var ad = await adService.GetAdvertisementByIdAsync(model.AdId);
+
+            if (user == null || ad == null || userId != ad.UserId)
+            {
+                ModelState.AddModelError("error", "something went wrong");
+                return ValidationProblem(ModelState);
+            }
+
+            LocationDTO locDto = new LocationDTO
+            {
+                Town = model.LocationTown,
+                Street = model.LocationStreet,
+            };
+            PetDTO petDto = new PetDTO
+            {
+                Name = model.PetName,
+                Location = locDto,
+            };
+            AdvertisementDTO newAd = new AdvertisementDTO
+            {   
+                Id = model.AdId,
+                Description = model.Description,
+                Pet = petDto,
+                Images = new List<ImageDTO>(),
+            };
+
+            string pathToImg = await AddImageGetPath(model.Image);
+            newAd.Images.Add(new ImageDTO
+            {
+                Path = pathToImg,
+                Size = model.Image.Length,
+            });
+            
+
+            var updatedAd = await adService.UpdateAdvetrtisementAsync(newAd);
+
+            var responseModel = mapper.Map<AdvertisementResponseModel>(updatedAd);
+
+            return new ObjectResult(responseModel) { StatusCode = StatusCodes.Status201Created };
+        }
+        
+
+        private async Task<string> AddImageGetPath(IFormFile image)
+        {
+            string ImagesFolder = config["ImagesFolder"];
+            string folderToSave = webHostEnvironment.WebRootPath + ImagesFolder;
+
+            string filename = Path.GetRandomFileName();
+
+            filename = Path.GetFileNameWithoutExtension(filename);
+            filename = filename + Path.GetExtension(image.FileName);
+            string fullpath = Path.Combine(folderToSave, filename);
+
+            using (var stream = System.IO.File.Create(fullpath))
+            {
+                await image.CopyToAsync(stream);
+            }
+
+            return ImagesFolder + filename;
         }
     }
 }

@@ -13,6 +13,6 @@ namespace MyPet.DAL.Interfaces
         Task<TEntity> GetByIdAsync(int id);
         Task<TEntity> DeleteAsync(int id);
         Task<IEnumerable<TEntity>> GetAllAsync();
-        TEntity Update(int id, TEntity entity);
+        Task<TEntity> Update(int id, TEntity entity);
     }
 }

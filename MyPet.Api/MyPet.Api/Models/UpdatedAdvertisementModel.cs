@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Http;
-using MyPet.Api.Validators;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -8,12 +7,10 @@ using System.Threading.Tasks;
 
 namespace MyPet.Api.Models
 {
-    public class AdvertisementModel
+    public class UpdatedAdvertisementModel
     {
         [Required]
-        public string UserId { get; set; }
-        [Required]
-        public string UserName { get; set; }
+        public int AdId { get; set; }
         [Required]
         public string PetName { get; set; }
         [Required]
@@ -22,10 +19,7 @@ namespace MyPet.Api.Models
         public string LocationStreet { get; set; }
         [Required]
         public string Description { get; set; }
-
         [Required]
-        [ImageExtensionAttribute(ErrorMessage = "Wrong file extension")]
-        [MaxImageSizeMBAttribute(ErrorMessage ="Wrong image size")]
         public IFormFile Image { get; set; }
     }
 }

@@ -39,6 +39,7 @@ namespace MyPet.BLL.Services
 
            await adRepo.AddAsync(ad);
         }        
+
         public async Task<AdvertisementDTO> GetAdvertisementByIdAsync(int id)
         {
             var ad = await adRepo.GetByIdAsync(id);           
@@ -52,12 +53,7 @@ namespace MyPet.BLL.Services
             var result = ads.OrderByDescending(x => x.PublicationDate);
 
             return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(result);           
-        }
-
-        public AdvertisementDTO UpdateAdvertisement(int id, AdvertisementDTO advertisementDTO)
-        {
-            throw new NotImplementedException();
-        }
+        }       
 
         public async Task<AdvertisementDTO> DeleteAdvertisementAsync(int id)
         {
@@ -85,6 +81,25 @@ namespace MyPet.BLL.Services
             var ads = await adRepo.GetAdsByUserAsync(userId);
 
             return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(ads);
+        }
+
+        public async Task<AdvertisementDTO> UpdateAdvetrtisementAsync(AdvertisementDTO model)
+        {
+            Pet pet = mapper.Map<Pet>(model.Pet);
+
+            Advertisement ad = new Advertisement
+            {
+                UserId = model.UserId,
+                UserName = model.UserName,
+                Description = model.Description,
+                PublicationDate = DateTime.Now,
+                Pet = pet,
+                Images = mapper.Map<List<ImageDTO>, List<Image>>(model.Images),
+            };
+
+            var result = await adRepo.Update(model.Id, ad);
+
+            return mapper.Map<AdvertisementDTO>(result);
         }
     }
 }

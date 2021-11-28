@@ -47,7 +47,7 @@ namespace MyPet.DAL.Repositories
             return await context.Set<TEntity>().ToListAsync();
         }
 
-        public abstract TEntity Update(int id, TEntity entity);
+        public abstract Task<TEntity> Update(int id, TEntity entity);
 
     }
 }
