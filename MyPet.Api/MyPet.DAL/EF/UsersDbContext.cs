@@ -13,7 +13,7 @@ namespace MyPet.DAL.EF
         
         public UsersDbContext(DbContextOptions<UsersDbContext> options) : base (options)
         {
-            Database.EnsureCreated();
+          //  Database.EnsureCreated();
         }        
     }
 }

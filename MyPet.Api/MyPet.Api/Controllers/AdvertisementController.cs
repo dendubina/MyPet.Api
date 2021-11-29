@@ -51,6 +51,7 @@ namespace MyPet.Api.Controllers
             {
                 Town = model.LocationTown,
                 Street = model.LocationStreet,
+                House = model.LocationHouse,
             };
             PetDTO petDto = new PetDTO
             {
@@ -62,6 +63,7 @@ namespace MyPet.Api.Controllers
                 UserId = model.UserId,
                 UserName = model.UserName,
                 Description = model.Description,
+                Category = model.Category,
                 Pet = petDto,
                 Images = new List<ImageDTO>(),
             };
@@ -80,8 +82,10 @@ namespace MyPet.Api.Controllers
                 UserName = model.UserName,
                 PublicationDate = DateTime.Now,
                 Description = model.Description,
+                Category = model.Category,
                 LocationStreet = model.LocationStreet,
                 LocationTown = model.LocationTown,
+                LocationHouse = model.LocationHouse,
                 PetName = model.PetName,
                 ImagePath = fullpath,
                 ImageSize = model.Image.Length,
@@ -186,9 +190,11 @@ namespace MyPet.Api.Controllers
                 return ValidationProblem(ModelState);
             }
 
-            var deletedAd = await adService.DeleteAdvertisementAsync(id);            
+            var deletedAd = await adService.DeleteAdvertisementAsync(id);
 
-            return Ok(deletedAd);
+            var responseModel = mapper.Map<AdvertisementResponseModel>(deletedAd);
+
+            return Ok(responseModel);
         }
 
         [HttpPost]
@@ -209,6 +215,7 @@ namespace MyPet.Api.Controllers
             {
                 Town = model.LocationTown,
                 Street = model.LocationStreet,
+                House = model.LocationHouse,
             };
             PetDTO petDto = new PetDTO
             {
@@ -219,21 +226,26 @@ namespace MyPet.Api.Controllers
             {   
                 Id = model.AdId,
                 Description = model.Description,
-                Pet = petDto,
-                Images = new List<ImageDTO>(),
+                Category = model.Category,
+                Pet = petDto,               
             };
 
-            string pathToImg = await AddImageGetPath(model.Image);
-            newAd.Images.Add(new ImageDTO
+            if (model.Image != null)
             {
-                Path = pathToImg,
-                Size = model.Image.Length,
-            });
+                newAd.Images = new List<ImageDTO>();
+                string pathToImg = await AddImageGetPath(model.Image);
+                newAd.Images.Add(new ImageDTO
+                {
+                    Path = pathToImg,
+                    Size = model.Image.Length,
+                });
+            }
+           
             
 
             var updatedAd = await adService.UpdateAdvetrtisementAsync(newAd);
 
-            var responseModel = mapper.Map<AdvertisementResponseModel>(updatedAd);
+            var responseModel = mapper.Map<AdvertisementResponseModel>(updatedAd);            
 
             return new ObjectResult(responseModel) { StatusCode = StatusCodes.Status201Created };
         }
@@ -251,7 +263,7 @@ namespace MyPet.Api.Controllers
             string fullpath = Path.Combine(folderToSave, filename);
 
             using (var stream = System.IO.File.Create(fullpath))
-            {
+            {                
                 await image.CopyToAsync(stream);
             }
 

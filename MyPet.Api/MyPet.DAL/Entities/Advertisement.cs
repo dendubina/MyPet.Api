@@ -13,6 +13,7 @@ namespace MyPet.DAL.Entities
         public string UserName { get; set; }
         public DateTime PublicationDate { get; set; }        
         public string  Description { get; set; }
+        public string Category { get; set; }
         public virtual List<Image> Images { get; set; }
         public virtual Pet Pet { get; set; }
     }

@@ -13,6 +13,7 @@ namespace MyPet.BLL.DTO
         public string UserName { get; set; }
         public DateTime PublicationDate { get; set; }       
         public string Description { get; set; }
+        public string Category { get; set; }
         public List<ImageDTO> Images { get; set; }
         public PetDTO Pet { get; set; }
     }

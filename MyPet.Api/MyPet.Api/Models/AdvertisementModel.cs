@@ -21,7 +21,11 @@ namespace MyPet.Api.Models
         [Required]
         public string LocationStreet { get; set; }
         [Required]
+        public string LocationHouse { get; set; }
+        [Required]
         public string Description { get; set; }
+        [Required]
+        public string Category { get; set; }
 
         [Required]
         [ImageExtensionAttribute(ErrorMessage = "Wrong file extension")]

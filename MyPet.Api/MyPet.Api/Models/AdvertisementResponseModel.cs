@@ -14,10 +14,12 @@ namespace MyPet.Api.Models
         public DateTime PublicationDate { get; set; }
         public string Description { get; set; }
         public List<ImageDTO> Images { get; set; }
+        public string Category { get; set; }
 
 
         public string PetName { get; set; }
         public string LocationTown { get; set; }
         public string LocationStreet { get; set; }
+        public string LocationHouse { get; set; }
     }
 }

@@ -64,9 +64,11 @@ namespace MyPet.DAL.Repositories
             }
 
             ad.Description = entity.Description;
+            ad.Category = entity.Category;
             ad.Pet.Name = entity.Pet.Name;
             ad.Pet.Location.Town = entity.Pet.Location.Town;
             ad.Pet.Location.Street = entity.Pet.Location.Street;
+            ad.Pet.Location.House = entity.Pet.Location.House;
 
             context.SaveChanges();
 

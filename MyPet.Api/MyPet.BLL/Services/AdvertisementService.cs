@@ -32,6 +32,7 @@ namespace MyPet.BLL.Services
                 UserId = model.UserId,
                 UserName = model.UserName,
                 Description = model.Description,
+                Category = model.Category,
                 PublicationDate = DateTime.Now,
                 Pet = pet,
                 Images = mapper.Map<List<ImageDTO>,List<Image>>(model.Images),
