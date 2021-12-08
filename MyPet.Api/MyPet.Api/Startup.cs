@@ -10,6 +10,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using MyPet.Api.Models.EmailModels;
 using MyPet.BLL.Interfaces;
 using MyPet.BLL.Services;
 using MyPet.DAL.EF;
@@ -38,6 +39,7 @@ namespace MyPet.Api
         {
             services.AddSingleton(Configuration);
             services.AddScoped<IAdvertisementService, AdvertisementService>();
+            services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IAdvertisementRepository, AdvertisementRepository>();
 
             services.AddDbContext<AppDbContext>(options =>
@@ -80,6 +82,8 @@ namespace MyPet.Api
                     }
                 });
             });
+
+            services.Configure<EmailConfiguration>(Configuration.GetSection("EmailConfiguration"));
 
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
             services.AddAuthentication(options =>

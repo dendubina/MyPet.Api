@@ -49,6 +49,7 @@ namespace MyPet.Api.Controllers
 
             LocationDTO locDto = new LocationDTO
             {
+                Region = model.LocationRegion,
                 Town = model.LocationTown,
                 Street = model.LocationStreet,
                 House = model.LocationHouse,
@@ -83,6 +84,7 @@ namespace MyPet.Api.Controllers
                 PublicationDate = DateTime.Now,
                 Description = model.Description,
                 Category = model.Category,
+                LocationRegion = model.LocationRegion,
                 LocationStreet = model.LocationStreet,
                 LocationTown = model.LocationTown,
                 LocationHouse = model.LocationHouse,
@@ -125,7 +127,7 @@ namespace MyPet.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAdsPagedList([FromQuery] AdPagedRequestParameters parameters)
         {
-            var ads = await adService.GetPagedAdvertisementsAsync(parameters.PageNumber, parameters.PageSize);
+            var ads = await adService.GetFilteredPagedAdvertisementsAsync(parameters.PageNumber, parameters.PageSize, parameters.LocationRegion, parameters.Category, parameters.LocationTown);
             var result = mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
 
             if (result.Count() > 0)
@@ -213,6 +215,7 @@ namespace MyPet.Api.Controllers
 
             LocationDTO locDto = new LocationDTO
             {
+                Region = model.LocationRegion,
                 Town = model.LocationTown,
                 Street = model.LocationStreet,
                 House = model.LocationHouse,

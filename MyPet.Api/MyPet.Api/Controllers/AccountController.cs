@@ -1,9 +1,14 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using MyPet.Api.Models;
+using MyPet.Api.Models.EmailModels;
+using MyPet.BLL.Interfaces;
+using MyPet.BLL.Models.EmailModels;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -20,15 +25,21 @@ namespace MyPet.Api.Controllers
     public class AccountController : ControllerBase
     {
         private readonly SignInManager<IdentityUser> SignInManager;
-        private readonly UserManager<IdentityUser> UserManager;
+        private readonly UserManager<IdentityUser> userManager;
         private readonly IConfiguration config;
+        private readonly EmailConfiguration emailConfig;
+        private readonly IEmailService emailService;
+        private readonly IMapper mapper;
 
 
-        public AccountController(SignInManager<IdentityUser> SignInManager, UserManager<IdentityUser> UserManager, IConfiguration config)
+        public AccountController(SignInManager<IdentityUser> SignInManager, UserManager<IdentityUser> UserManager, IConfiguration config, IOptions<EmailConfiguration> options, IEmailService emailService, IMapper mapper)
         {
             this.SignInManager = SignInManager;
-            this.UserManager = UserManager;
+            userManager = UserManager;
             this.config = config;
+            emailConfig = options.Value;
+            this.emailService = emailService;
+            this.mapper = mapper;
         }
 
         [HttpPost]
@@ -40,11 +51,19 @@ namespace MyPet.Api.Controllers
                 Email = model.Email,
             };
 
-            var result = await UserManager.CreateAsync(user, model.Password);
+            var result = await userManager.CreateAsync(user, model.Password);
 
             if (result.Succeeded)
             {
-                return Ok(new { jwttoken = GenerateJWTToken(model.Email, user) });
+                var createdUser = userManager.Users.SingleOrDefault(x => x.Email.Equals(model.Email));
+                string code = await userManager.GenerateEmailConfirmationTokenAsync(createdUser);
+
+                bool emailSendingResult = await emailService.SendConfirmationEmail(mapper.Map<EmailConfig>(emailConfig), createdUser.Email, createdUser.Id, code);
+
+                return Ok(new { 
+                    jwttoken = GenerateJWTToken(model.Email, createdUser),
+                    isEmailSend = emailSendingResult,
+                });;
             }
             else
             {
@@ -64,11 +83,32 @@ namespace MyPet.Api.Controllers
 
             if (result.Succeeded)
             {
-                var user = UserManager.Users.SingleOrDefault(x => x.Email.Equals(model.Email));
+                var user = userManager.Users.SingleOrDefault(x => x.Email.Equals(model.Email));                
                 return Ok(new { jwttoken = GenerateJWTToken(user.Email, user) });
             }
 
             ModelState.AddModelError("error", "Неправильный логин или пароль");
+            return ValidationProblem(ModelState);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ConfirmEmail([Required]string userId, [Required]string emailToken)
+        {
+            var user = await userManager.FindByIdAsync(userId);
+
+            if(user != null)
+            {
+                var result = await userManager.ConfirmEmailAsync(user, emailToken);
+
+                if (result.Succeeded)
+                {
+                    return Ok(new {
+                        confirmationResult = true,
+                    });
+                }
+            }
+
+            ModelState.AddModelError("error", "Something went wrong");
             return ValidationProblem(ModelState);
         }
 

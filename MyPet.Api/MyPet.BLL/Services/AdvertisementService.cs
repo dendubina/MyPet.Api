@@ -63,11 +63,31 @@ namespace MyPet.BLL.Services
             return mapper.Map<AdvertisementDTO>(ad);
         }
 
-        public async Task<IEnumerable<AdvertisementDTO>> GetPagedAdvertisementsAsync(int pageNumber, int pageSize)
+        public async Task<IEnumerable<AdvertisementDTO>> GetFilteredPagedAdvertisementsAsync(int pageNumber, int pageSize, string region, string category, string locationTown)
         {
-            var ads = await adRepo.GetPagedListAsync(pageNumber, pageSize);
+            if(locationTown != "all")
+            {
+                if(category != "all")
+                {                    
+                    return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(await adRepo.GetPagedListByTownAndCategoryAsync(pageNumber, pageSize, locationTown, category));
+                }
+                
+                return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(await adRepo.GetPagedListByTownAsync(pageNumber, pageSize, locationTown));
 
-            return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(ads);
+            }else if (region != "all")
+            {
+                if (category != "all")
+                {
+                    return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(await adRepo.GetPagedListByRegionAndCategoryAsync(pageNumber, pageSize, region, category));
+                }
+                return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(await adRepo.GetPagedListByRegionAsync(pageNumber, pageSize, region));
+
+            }else if (category != "all")
+            {
+                return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(await adRepo.GetPagedListByCategoryAsync(pageNumber, pageSize, category));
+            }            
+
+            return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(await adRepo.GetPagedListAsync(pageNumber, pageSize, category, locationTown));
         }
 
         public async Task<IEnumerable<AdvertisementDTO>> GetPagedAdsByUserAsync(string userId, int pageNumber, int pageSize)
@@ -95,6 +115,7 @@ namespace MyPet.BLL.Services
                 Description = model.Description,
                 PublicationDate = DateTime.Now,
                 Pet = pet,
+                Category = model.Category,
                 Images = mapper.Map<List<ImageDTO>, List<Image>>(model.Images),
             };
 

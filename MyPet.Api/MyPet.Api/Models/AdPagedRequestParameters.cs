@@ -5,22 +5,10 @@ using System.Threading.Tasks;
 
 namespace MyPet.Api.Models
 {
-    public class AdPagedRequestParameters
+    public class AdPagedRequestParameters : PagedRequestParameters
     {
-		private int _pageSize = 10;
-		const int maxPageSize = 20;
-		public int PageNumber { get; set; } = 1;
-		
-		public int PageSize
-		{
-			get
-			{
-				return _pageSize;
-			}
-			set
-			{
-				_pageSize = (value > maxPageSize) ? maxPageSize : value;
-			}
-		}
-	}
+        public string LocationRegion { get; set; } = "all";
+        public string Category { get; set; } = "all";
+        public string LocationTown { get; set; } = "all";
+    }
 }

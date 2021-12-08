@@ -9,6 +9,7 @@ namespace MyPet.DAL.Entities
     public class Location
     {
         public int Id { get; set; }
+        public string Region { get; set; }
         public string Town { get; set; }
         public string Street { get; set; }
         public string House { get; set; }

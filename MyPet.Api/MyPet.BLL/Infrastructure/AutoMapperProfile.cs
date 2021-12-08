@@ -15,17 +15,17 @@ namespace MyPet.BLL.Infrastructure
         {
             CreateMap<Advertisement, AdvertisementDTO>();
 
-            CreateMap<Pet, PetDTO>();
+            CreateMap<Pet, PetDTO>().ReverseMap();
 
-            CreateMap<Location, LocationDTO>();
+            CreateMap<Location, LocationDTO>().ReverseMap();
 
-            CreateMap<Image, ImageDTO>();
+            CreateMap<Image, ImageDTO>().ReverseMap();
 
 
 
-            CreateMap<PetDTO, Pet>();
+            /*CreateMap<PetDTO, Pet>();
             CreateMap<LocationDTO, Location>();
-            CreateMap<ImageDTO, Image>();
+            CreateMap<ImageDTO, Image>();*/
         }
     }
 }

@@ -18,6 +18,7 @@ namespace MyPet.Api.Models
 
 
         public string PetName { get; set; }
+        public string LocationRegion { get; set; }
         public string LocationTown { get; set; }
         public string LocationStreet { get; set; }
         public string LocationHouse { get; set; }
