@@ -24,7 +24,7 @@ namespace MyPet.DAL.Repositories
         public async Task AddAsync(TEntity entity)
         {
             await settedEntity.AddAsync(entity);
-            context.SaveChanges();
+            await context.SaveChangesAsync();
         }
 
         public async Task<TEntity> DeleteAsync(int id)
@@ -32,7 +32,7 @@ namespace MyPet.DAL.Repositories
             TEntity entity = await settedEntity.FindAsync(id);
 
             settedEntity.Remove(entity);
-            context.SaveChanges();
+            await context.SaveChangesAsync();
 
             return entity;
         }
@@ -42,9 +42,9 @@ namespace MyPet.DAL.Repositories
             return await settedEntity.FindAsync(id);
         }
 
-        public async Task<IEnumerable<TEntity>> GetAllAsync()
+        public IQueryable<TEntity> GetAll()
         {
-            return await context.Set<TEntity>().ToListAsync();
+            return context.Set<TEntity>().AsNoTracking();
         }
 
         public abstract Task<TEntity> Update(int id, TEntity entity);

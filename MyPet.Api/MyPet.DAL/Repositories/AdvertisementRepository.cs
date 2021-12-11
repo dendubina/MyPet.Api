@@ -71,81 +71,22 @@ namespace MyPet.DAL.Repositories
             ad.Pet.Location.House = entity.Pet.Location.House;
             ad.Pet.Location.Region = entity.Pet.Location.Region;
 
-            context.SaveChanges();
+            await context.SaveChangesAsync();
 
             return ad;
         }
 
 
-
-
-
-        public async Task<IEnumerable<Advertisement>> GetPagedListByCategoryAsync(int pageNumber, int pageSize, string category)
+        public IQueryable<Advertisement> GetPagedAds(int pageNumber, int pageSize)
         {
-            return await context.Advertisements                
-                .Include(x => x.Images)
-                .Include(x => x.Pet).ThenInclude(x => x.Location)
-                .Where(x => x.Category == category)
-                .OrderByDescending(x => x.PublicationDate)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .AsNoTracking()
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Advertisement>> GetPagedListByRegionAndCategoryAsync(int pageNumber, int pageSize, string region, string category)
-        {
-            return await context.Advertisements
-                .Include(x => x.Images)
-                .Include(x => x.Pet).ThenInclude(x => x.Location)
-                .Where(x => x.Category == category)
-                .Where(x => x.Pet.Location.Region == region)
-                .OrderByDescending(x => x.PublicationDate)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .AsNoTracking()
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Advertisement>> GetPagedListByRegionAsync(int pageNumber, int pageSize, string region)
-        {
-            return await context.Advertisements
+            return context.Advertisements
                 .Include(x => x.Images)
                 .Include(x => x.Pet).ThenInclude(x => x.Location)                
-                .Where(x => x.Pet.Location.Region == region)
-                .OrderByDescending(x => x.PublicationDate)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
-                .AsNoTracking()
-                .ToListAsync();
-        }
+                .AsNoTracking();                
+        }      
 
-        public async Task<IEnumerable<Advertisement>> GetPagedListByTownAsync(int pageNumber, int pageSize, string town)
-        {
-            return await context.Advertisements
-               .Include(x => x.Images)
-               .Include(x => x.Pet).ThenInclude(x => x.Location)
-               .Where(x => x.Pet.Location.Town == town)
-               .OrderByDescending(x => x.PublicationDate)
-               .Skip((pageNumber - 1) * pageSize)
-               .Take(pageSize)
-               .AsNoTracking()
-               .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Advertisement>> GetPagedListByTownAndCategoryAsync(int pageNumber, int pageSize, string locationTown, string category)
-        {
-            return  await context.Advertisements
-                .Include(x => x.Images)
-                .Include(x => x.Pet).ThenInclude(x => x.Location)
-                .Where(x => x.Category == category)
-                .Where(x => x.Pet.Location.Town == locationTown)                
-                .OrderByDescending(x => x.PublicationDate)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .AsNoTracking()
-                .ToListAsync();
-            
-        }
+        
     }
 }

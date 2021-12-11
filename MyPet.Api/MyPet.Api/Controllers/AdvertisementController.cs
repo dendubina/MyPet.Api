@@ -111,18 +111,18 @@ namespace MyPet.Api.Controllers
             return ValidationProblem(ModelState);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAllAdvertisements()
-        {
-            var ads = await adService.GetAllAdvertisementsAsync();
+        //[HttpGet]
+        //public async Task<IActionResult> GetAllAdvertisements()
+        //{
+        //    var ads = await adService.GetAllAdvertisementsAsync();
 
-            var result = mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
+        //    var result = mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
 
-            if (result.Count() > 0)
-                return Ok(result);
-            else
-                return BadRequest();
-        }
+        //    if (result.Count() > 0)
+        //        return Ok(result);
+        //    else
+        //        return BadRequest();
+        //}
 
         [HttpGet]
         public async Task<IActionResult> GetAdsPagedList([FromQuery] AdPagedRequestParameters parameters)

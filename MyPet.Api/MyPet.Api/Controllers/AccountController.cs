@@ -93,7 +93,7 @@ namespace MyPet.Api.Controllers
 
         [HttpGet]
         public async Task<IActionResult> ConfirmEmail([Required]string userId, [Required]string emailToken)
-        {
+         {
             var user = await userManager.FindByIdAsync(userId);
 
             if(user != null)
@@ -103,6 +103,7 @@ namespace MyPet.Api.Controllers
                 if (result.Succeeded)
                 {
                     return Ok(new {
+                        status = 200,
                         confirmationResult = true,
                     });
                 }
@@ -113,8 +114,8 @@ namespace MyPet.Api.Controllers
         }
 
         [HttpGet]
-        public IActionResult CheckToken([Required] string jwttoken)
-        {
+        public async Task<IActionResult> CheckToken([Required] string jwttoken)
+        {            
 
             try
             {
@@ -122,7 +123,15 @@ namespace MyPet.Api.Controllers
                 var token = handler.ReadJwtToken(jwttoken);
                 Dictionary<string, string> claims = new Dictionary<string, string>();
 
-                claims.Add("tokenValidation", ValidateToken(jwttoken).ToString().ToLower());
+               
+                string userId = token.Claims.Where(x => x.Type == "unique_name").FirstOrDefault().Value;
+                bool isEmailConfirmed = await GetIsEmailConfirmed(userId);
+                claims.Add("isEmailConfirmed", isEmailConfirmed.ToString().ToLower());
+
+
+                bool isTokenValid = ValidateToken(jwttoken);
+                claims.Add("tokenValidation",  isTokenValid.ToString().ToLower());
+                
 
                 foreach (var claim in token.Claims)
                 {
@@ -190,6 +199,16 @@ namespace MyPet.Api.Controllers
                 return false;
             }
             return true;
+        }
+
+        private async Task<bool> GetIsEmailConfirmed(string userId)
+        {
+            var user = await userManager.FindByIdAsync(userId);
+
+            if (user != null && user.EmailConfirmed == true)
+                return true;
+            else
+                return false;
         }
     }
 }

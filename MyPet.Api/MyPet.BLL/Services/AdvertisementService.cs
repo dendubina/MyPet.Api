@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using MyPet.BLL.DTO;
 using MyPet.BLL.Interfaces;
 using MyPet.DAL.Entities;
@@ -9,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 
 namespace MyPet.BLL.Services
 {
@@ -50,10 +52,11 @@ namespace MyPet.BLL.Services
 
         public async Task<IEnumerable<AdvertisementDTO>> GetAllAdvertisementsAsync()
         {
-            var ads = await adRepo.GetAllAsync();
-            var result = ads.OrderByDescending(x => x.PublicationDate);
+            var ads = await adRepo.GetAll()
+               // .OrderByDescending(x => x.PublicationDate)
+                .ToListAsync();            
 
-            return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(result);           
+            return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(ads);           
         }       
 
         public async Task<AdvertisementDTO> DeleteAdvertisementAsync(int id)
@@ -65,7 +68,40 @@ namespace MyPet.BLL.Services
 
         public async Task<IEnumerable<AdvertisementDTO>> GetFilteredPagedAdvertisementsAsync(int pageNumber, int pageSize, string region, string category, string locationTown)
         {
+            var ads = adRepo.GetPagedAds(pageNumber, pageSize);
+
+
+            if(category != "all")
+            {
+                ads = ads
+                    .Where(x => x.Category == category);
+            }
+
             if(locationTown != "all")
+            {
+                ads = ads
+                    .Where(x => x.Pet.Location.Town == locationTown);
+                
+               
+            } else if (region != "all")
+            {
+                
+                    ads = ads
+                        
+                        .Where(x => x.Pet.Location.Region == region);
+                
+                   
+                
+            }
+            ads = ads
+                .OrderByDescending(x => x.PublicationDate);
+
+            var result = await ads.ToListAsync();
+
+            return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(result);
+
+
+            /*if(locationTown != "all")
             {
                 if(category != "all")
                 {                    
@@ -87,7 +123,7 @@ namespace MyPet.BLL.Services
                 return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(await adRepo.GetPagedListByCategoryAsync(pageNumber, pageSize, category));
             }            
 
-            return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(await adRepo.GetPagedListAsync(pageNumber, pageSize, category, locationTown));
+            return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(await adRepo.GetPagedListAsync(pageNumber, pageSize, category, locationTown));*/
         }
 
         public async Task<IEnumerable<AdvertisementDTO>> GetPagedAdsByUserAsync(string userId, int pageNumber, int pageSize)
