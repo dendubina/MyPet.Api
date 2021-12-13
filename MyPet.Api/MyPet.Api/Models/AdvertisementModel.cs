@@ -9,11 +9,8 @@ using System.Threading.Tasks;
 namespace MyPet.Api.Models
 {
     public class AdvertisementModel
-    {
-        [Required]
-        public string UserId { get; set; }
-        [Required]
-        public string UserName { get; set; }
+    {      
+       
         [Required]
         public string PetName { get; set; }
         [Required]

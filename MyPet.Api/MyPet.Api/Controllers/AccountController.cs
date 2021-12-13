@@ -47,7 +47,7 @@ namespace MyPet.Api.Controllers
         {
             var user = new IdentityUser
             {
-                UserName = model.Email,
+                UserName = model.UserName,
                 Email = model.Email,
             };
 
@@ -154,6 +154,7 @@ namespace MyPet.Api.Controllers
             {
                 new Claim(JwtRegisteredClaimNames.Email, email),
                 new Claim(JwtRegisteredClaimNames.UniqueName, user.Id),
+                new Claim("username", user.UserName),
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["JwtKey"]));

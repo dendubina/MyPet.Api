@@ -45,6 +45,9 @@ namespace MyPet.Api.Controllers
         [Authorize]
         public async Task<IActionResult> AddAdvertisement([FromForm] AdvertisementModel model)
         {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
+            var user = await UserManager.FindByIdAsync(userId);
+
             string fullpath = await AddImageGetPath(model.Image);
 
             LocationDTO locDto = new LocationDTO
@@ -61,8 +64,9 @@ namespace MyPet.Api.Controllers
             };
             AdvertisementDTO admodel = new AdvertisementDTO
             {
-                UserId = model.UserId,
-                UserName = model.UserName,
+                UserId = user.Id,
+                UserName = user.UserName,
+                UserEmail = user.Email,
                 Description = model.Description,
                 Category = model.Category,
                 Pet = petDto,
@@ -79,8 +83,9 @@ namespace MyPet.Api.Controllers
 
             var responseModel = new
             {
-                UserId = model.UserId,
-                UserName = model.UserName,
+                UserId = user.Id,
+                UserName = user.UserName,
+                UserEmail = user.Email,
                 PublicationDate = DateTime.Now,
                 Description = model.Description,
                 Category = model.Category,
@@ -111,18 +116,18 @@ namespace MyPet.Api.Controllers
             return ValidationProblem(ModelState);
         }
 
-        //[HttpGet]
-        //public async Task<IActionResult> GetAllAdvertisements()
-        //{
-        //    var ads = await adService.GetAllAdvertisementsAsync();
+        [HttpGet]
+        public async Task<IActionResult> GetAllAdvertisements()
+        {
+            var ads = await adService.GetAllAdvertisementsAsync();
 
-        //    var result = mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
+            var result = mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
 
-        //    if (result.Count() > 0)
-        //        return Ok(result);
-        //    else
-        //        return BadRequest();
-        //}
+            if (result.Count() > 0)
+                return Ok(result);
+            else
+                return BadRequest();
+        }
 
         [HttpGet]
         public async Task<IActionResult> GetAdsPagedList([FromQuery] AdPagedRequestParameters parameters)

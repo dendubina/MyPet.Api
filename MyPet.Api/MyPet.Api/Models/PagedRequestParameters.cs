@@ -7,7 +7,7 @@ namespace MyPet.Api.Models
 {
     public class PagedRequestParameters
     {
-		private int _pageSize = 20;
+		private int _pageSize = 15;
 		const int maxPageSize = 50;
 		public int PageNumber { get; set; } = 1;
 

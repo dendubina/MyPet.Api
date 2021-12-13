@@ -33,6 +33,7 @@ namespace MyPet.BLL.Services
             {
                 UserId = model.UserId,
                 UserName = model.UserName,
+                UserEmail = model.UserEmail,
                 Description = model.Description,
                 Category = model.Category,
                 PublicationDate = DateTime.Now,
@@ -53,7 +54,7 @@ namespace MyPet.BLL.Services
         public async Task<IEnumerable<AdvertisementDTO>> GetAllAdvertisementsAsync()
         {
             var ads = await adRepo.GetAll()
-               // .OrderByDescending(x => x.PublicationDate)
+                .OrderByDescending(x => x.PublicationDate)
                 .ToListAsync();            
 
             return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(ads);           
@@ -69,61 +70,29 @@ namespace MyPet.BLL.Services
         public async Task<IEnumerable<AdvertisementDTO>> GetFilteredPagedAdvertisementsAsync(int pageNumber, int pageSize, string region, string category, string locationTown)
         {
             var ads = adRepo.GetPagedAds(pageNumber, pageSize);
+           
 
-
-            if(category != "all")
+            if (category != "all")
             {
                 ads = ads
                     .Where(x => x.Category == category);
             }
-
             if(locationTown != "all")
             {
                 ads = ads
-                    .Where(x => x.Pet.Location.Town == locationTown);
-                
+                    .Where(x => x.Pet.Location.Town == locationTown);                
                
             } else if (region != "all")
-            {
-                
-                    ads = ads
-                        
-                        .Where(x => x.Pet.Location.Region == region);
-                
-                   
-                
-            }
-            ads = ads
-                .OrderByDescending(x => x.PublicationDate);
-
-            var result = await ads.ToListAsync();
-
-            return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(result);
-
-
-            /*if(locationTown != "all")
-            {
-                if(category != "all")
-                {                    
-                    return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(await adRepo.GetPagedListByTownAndCategoryAsync(pageNumber, pageSize, locationTown, category));
-                }
-                
-                return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(await adRepo.GetPagedListByTownAsync(pageNumber, pageSize, locationTown));
-
-            }else if (region != "all")
-            {
-                if (category != "all")
-                {
-                    return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(await adRepo.GetPagedListByRegionAndCategoryAsync(pageNumber, pageSize, region, category));
-                }
-                return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(await adRepo.GetPagedListByRegionAsync(pageNumber, pageSize, region));
-
-            }else if (category != "all")
-            {
-                return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(await adRepo.GetPagedListByCategoryAsync(pageNumber, pageSize, category));
+            {                
+                ads = ads                        
+                    .Where(x => x.Pet.Location.Region == region);                
             }            
 
-            return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(await adRepo.GetPagedListAsync(pageNumber, pageSize, category, locationTown));*/
+            var result = await ads.ToListAsync();
+            
+
+            return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(result);
+           
         }
 
         public async Task<IEnumerable<AdvertisementDTO>> GetPagedAdsByUserAsync(string userId, int pageNumber, int pageSize)
@@ -145,9 +114,7 @@ namespace MyPet.BLL.Services
             Pet pet = mapper.Map<Pet>(model.Pet);
 
             Advertisement ad = new Advertisement
-            {
-                UserId = model.UserId,
-                UserName = model.UserName,
+            {                                
                 Description = model.Description,
                 PublicationDate = DateTime.Now,
                 Pet = pet,

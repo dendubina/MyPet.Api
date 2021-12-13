@@ -81,7 +81,8 @@ namespace MyPet.DAL.Repositories
         {
             return context.Advertisements
                 .Include(x => x.Images)
-                .Include(x => x.Pet).ThenInclude(x => x.Location)                
+                .Include(x => x.Pet).ThenInclude(x => x.Location)
+                .OrderByDescending(x => x.PublicationDate)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .AsNoTracking();                

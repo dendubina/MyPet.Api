@@ -13,6 +13,9 @@ namespace MyPet.Api.Models
         public string Email { get; set; }
 
         [Required]
+        [MaxLength(10, ErrorMessage = "Максимальная длина - 10 символов")]
+        public string UserName { get; set; }
+        [Required]
         public string Password { get; set; }
 
         [Compare("Password", ErrorMessage = "Пароли не совпадают")]
