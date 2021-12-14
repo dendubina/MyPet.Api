@@ -49,16 +49,7 @@ namespace MyPet.BLL.Services
             var ad = await adRepo.GetByIdAsync(id);           
 
             return mapper.Map<AdvertisementDTO>(ad);
-        }
-
-        public async Task<IEnumerable<AdvertisementDTO>> GetAllAdvertisementsAsync()
-        {
-            var ads = await adRepo.GetAll()
-                .OrderByDescending(x => x.PublicationDate)
-                .ToListAsync();            
-
-            return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(ads);           
-        }       
+        }        
 
         public async Task<AdvertisementDTO> DeleteAdvertisementAsync(int id)
         {
@@ -72,17 +63,17 @@ namespace MyPet.BLL.Services
             var ads = adRepo.GetPagedAds(pageNumber, pageSize);
            
 
-            if (category != "all")
+            if (!string.IsNullOrWhiteSpace(category))
             {
                 ads = ads
                     .Where(x => x.Category == category);
             }
-            if(locationTown != "all")
+            if(!string.IsNullOrWhiteSpace(locationTown))
             {
                 ads = ads
                     .Where(x => x.Pet.Location.Town == locationTown);                
                
-            } else if (region != "all")
+            } else if (!string.IsNullOrWhiteSpace(region))
             {                
                 ads = ads                        
                     .Where(x => x.Pet.Location.Region == region);                
@@ -125,6 +116,16 @@ namespace MyPet.BLL.Services
             var result = await adRepo.Update(model.Id, ad);
 
             return mapper.Map<AdvertisementDTO>(result);
+        }
+
+
+        public async Task<IEnumerable<AdvertisementDTO>> GetAllAdvertisementsAsync()
+        {
+            var ads = await adRepo.GetAll()
+                .OrderByDescending(x => x.PublicationDate)
+                .ToListAsync();
+
+            return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(ads);
         }
     }
 }

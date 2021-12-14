@@ -114,7 +114,7 @@ namespace MyPet.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> CheckToken([Required] string jwttoken)
+        public async Task<IActionResult> CheckToken([Required]string jwttoken)
         {            
 
             try
@@ -142,8 +142,10 @@ namespace MyPet.Api.Controllers
             }
             catch
             {
-                ModelState.AddModelError("error", "JwtToken is invalid");
-                return ValidationProblem(ModelState);
+                //ModelState.AddModelError("error", "JwtToken is invalid");
+                // return ValidationProblem(ModelState);
+
+                return Unauthorized();
             }
         }
 

@@ -22,6 +22,7 @@ namespace MyPet.Api.Controllers
 {
     [Route("[controller]/[action]")]
     [ApiController]
+    [Authorize]
     public class AdvertisementController : ControllerBase
     {
         private readonly ILogger<AdvertisementController> _logger;
@@ -41,8 +42,7 @@ namespace MyPet.Api.Controllers
             this.UserManager = UserManager;
         }
 
-        [HttpPut]
-        [Authorize]
+        [HttpPut]        
         public async Task<IActionResult> AddAdvertisement([FromForm] AdvertisementModel model)
         {
             var userId = User.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
@@ -104,19 +104,7 @@ namespace MyPet.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAdvertisementById([Required] int id)
-        {
-            var ad = await adService.GetAdvertisementByIdAsync(id);
-            var result = mapper.Map<AdvertisementResponseModel>(ad);
-
-            if (result != null)
-                return new ObjectResult(result);
-            else
-                ModelState.AddModelError("id", "Ad not found");
-            return ValidationProblem(ModelState);
-        }
-
-        [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAllAdvertisements()
         {
             var ads = await adService.GetAllAdvertisementsAsync();
@@ -130,61 +118,52 @@ namespace MyPet.Api.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetAdvertisementById([Required] int id)
+        {
+            var ad = await adService.GetAdvertisementByIdAsync(id);
+            var result = mapper.Map<AdvertisementResponseModel>(ad);
+
+            if (result != null)
+                return new ObjectResult(result);
+            else
+                ModelState.AddModelError("id", "Ad not found");
+            return ValidationProblem(ModelState);
+        }             
+
+        [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAdsPagedList([FromQuery] AdPagedRequestParameters parameters)
         {
             var ads = await adService.GetFilteredPagedAdvertisementsAsync(parameters.PageNumber, parameters.PageSize, parameters.LocationRegion, parameters.Category, parameters.LocationTown);
             var result = mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
-
-            if (result.Count() > 0)
-                return Ok(result);
-            else
-                return BadRequest();
+            
+            return Ok(result);            
         }
 
-        [HttpGet]
-        [Authorize]
+        [HttpGet]        
         public async Task<IActionResult> GetAdsByUser()
         {
             var userId = User.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
-            var user = await UserManager.FindByIdAsync(userId);            
-
-            if (user == null) {
-                return BadRequest();
-            }
             
-             var ads = await adService.GetAdsByUserAsync(userId);
-             var result = mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
-
-
-            if (result.Count() > 0)
-                return Ok(result);
-            else
-                return BadRequest();
+            var ads = await adService.GetAdsByUserAsync(userId);
+            var result = mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
+            
+            return Ok(result);           
         }
 
-        [HttpGet]
-        [Authorize]
+        [HttpGet]        
         public async Task<IActionResult> GetUsersAdsPagedList([FromQuery] AdPagedRequestParameters parameters)
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
-            var user = await UserManager.FindByIdAsync(userId);
-
-            if (user == null)
-            {
-                return BadRequest();
-            }
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;            
 
             var ads = await adService.GetPagedAdsByUserAsync(userId, parameters.PageNumber, parameters.PageSize);
             var result = mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
-
-            if (result.Count() > 0)
-                return Ok(result);
-            else
-                return BadRequest();
+            
+            return Ok(result);            
         }
 
-        [HttpDelete]
-        [Authorize]
+        [HttpDelete]        
         public async Task<IActionResult> DeleteAdvertisement([Required] int id)
         {
             var userId = User.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
@@ -204,8 +183,7 @@ namespace MyPet.Api.Controllers
             return Ok(responseModel);
         }
 
-        [HttpPost]
-        [Authorize]
+        [HttpPost]        
         public async Task<IActionResult> UpdateAdvertisement([FromForm] UpdatedAdvertisementModel model)
         {
             var userId = User.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
@@ -262,20 +240,21 @@ namespace MyPet.Api.Controllers
         private async Task<string> AddImageGetPath(IFormFile image)
         {
             string ImagesFolder = config["ImagesFolder"];
-            string folderToSave = webHostEnvironment.WebRootPath + ImagesFolder;
+            string folderToSave = webHostEnvironment.WebRootPath + ImagesFolder; 
 
             string filename = Path.GetRandomFileName();
 
-            filename = Path.GetFileNameWithoutExtension(filename);
+            filename = Path.GetFileNameWithoutExtension(filename); 
             filename = filename + Path.GetExtension(image.FileName);
+
             string fullpath = Path.Combine(folderToSave, filename);
 
-            using (var stream = System.IO.File.Create(fullpath))
+            using (var stream = System.IO.File.Create(fullpath)) 
             {                
                 await image.CopyToAsync(stream);
             }
 
-            return ImagesFolder + filename;
+            return ImagesFolder + filename; 
         }
     }
 }
