@@ -30,37 +30,30 @@ namespace MyPet.Api.Controllers
         private readonly IMapper mapper;
         private readonly IWebHostEnvironment webHostEnvironment;
         private readonly IConfiguration config;
-        private readonly UserManager<IdentityUser> UserManager;
+        private readonly UserManager<IdentityUser> userManager;
 
-        public AdvertisementController(ILogger<AdvertisementController> logger, IAdvertisementService adservice, IMapper mapper, IWebHostEnvironment env, IConfiguration config, UserManager<IdentityUser> UserManager)
+        public AdvertisementController(ILogger<AdvertisementController> logger, IAdvertisementService adService, IMapper mapper, IWebHostEnvironment env, IConfiguration config, UserManager<IdentityUser> userManager)
         {
             _logger = logger;
-            this.adService = adservice;
+            this.adService = adService;
             this.mapper = mapper;
             webHostEnvironment = env;
             this.config = config;
-            this.UserManager = UserManager;
+            this.userManager = userManager;
         }
 
         [HttpPut]        
         public async Task<IActionResult> AddAdvertisement([FromForm] AdvertisementModel model)
         {
             var userId = User.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
-            var user = await UserManager.FindByIdAsync(userId);
+            var user = await userManager.FindByIdAsync(userId);
 
             string fullpath = await AddImageGetPath(model.Image);
-
-            LocationDTO locDto = new LocationDTO
-            {
-                Region = model.LocationRegion,
-                Town = model.LocationTown,
-                Street = model.LocationStreet,
-                House = model.LocationHouse,
-            };
+           
             PetDTO petDto = new PetDTO
             {
                 Name = model.PetName,
-                Location = locDto,
+                Location = mapper.Map<LocationDTO>(model)
             };
             AdvertisementDTO admodel = new AdvertisementDTO
             {
@@ -110,11 +103,8 @@ namespace MyPet.Api.Controllers
             var ads = await adService.GetAllAdvertisementsAsync();
 
             var result = mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
-
-            if (result.Count() > 0)
-                return Ok(result);
-            else
-                return BadRequest();
+            
+            return Ok(result);            
         }
 
         [HttpGet]
@@ -167,7 +157,7 @@ namespace MyPet.Api.Controllers
         public async Task<IActionResult> DeleteAdvertisement([Required] int id)
         {
             var userId = User.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
-            var user = await UserManager.FindByIdAsync(userId);
+            var user = await userManager.FindByIdAsync(userId);
             var ad = await adService.GetAdvertisementByIdAsync(id);
 
             if(user == null || ad == null || userId != ad.UserId)
@@ -187,7 +177,7 @@ namespace MyPet.Api.Controllers
         public async Task<IActionResult> UpdateAdvertisement([FromForm] UpdatedAdvertisementModel model)
         {
             var userId = User.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
-            var user = await UserManager.FindByIdAsync(userId);
+            var user = await userManager.FindByIdAsync(userId);
             var ad = await adService.GetAdvertisementByIdAsync(model.AdId);
 
             if (user == null || ad == null || userId != ad.UserId)

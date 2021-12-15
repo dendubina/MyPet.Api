@@ -1,14 +1,12 @@
 ﻿using AutoMapper;
 using MyPet.Api.Models;
-using MyPet.Api.Models.EmailModels;
 using MyPet.BLL.DTO;
-using MyPet.BLL.Models.EmailModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace MyPet.Api.Services
+namespace MyPet.Api.Mapper
 {
     public class MapperProfile : Profile
     {
@@ -21,7 +19,13 @@ namespace MyPet.Api.Services
                .ForMember(dest => dest.LocationHouse, opt => opt.MapFrom(src => src.Pet.Location.House))
                .ForMember(dest => dest.PetName, opt => opt.MapFrom(src => src.Pet.Name));
 
-            CreateMap<EmailConfiguration, EmailConfig>();
+            CreateMap<AdvertisementModel, LocationDTO>()
+                .ForMember(dest => dest.Region, opt => opt.MapFrom(src => src.LocationRegion))
+                .ForMember(dest => dest.Town, opt => opt.MapFrom(src => src.LocationTown))
+                .ForMember(dest => dest.Street, opt => opt.MapFrom(src => src.LocationStreet))
+                .ForMember(dest => dest.House, opt => opt.MapFrom(src => src.LocationHouse));
+
+
         }
-    }
+    }    
 }

@@ -1,21 +1,10 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using MyPet.Api.Models;
-using MyPet.Api.Models.EmailModels;
+using MyPet.BLL.Exceptions;
 using MyPet.BLL.Interfaces;
-using MyPet.BLL.Models.EmailModels;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MyPet.Api.Controllers
@@ -24,93 +13,69 @@ namespace MyPet.Api.Controllers
     [ApiController]
     public class AccountController : ControllerBase
     {
-        private readonly SignInManager<IdentityUser> SignInManager;
-        private readonly UserManager<IdentityUser> userManager;
-        private readonly IConfiguration config;
-        private readonly EmailConfiguration emailConfig;
-        private readonly IEmailService emailService;
-        private readonly IMapper mapper;
+        
+        private readonly IAccountService accountService;
 
-
-        public AccountController(SignInManager<IdentityUser> SignInManager, UserManager<IdentityUser> UserManager, IConfiguration config, IOptions<EmailConfiguration> options, IEmailService emailService, IMapper mapper)
-        {
-            this.SignInManager = SignInManager;
-            userManager = UserManager;
-            this.config = config;
-            emailConfig = options.Value;
-            this.emailService = emailService;
-            this.mapper = mapper;
+        public AccountController(IAccountService accountService)
+        {            
+            this.accountService = accountService;
         }
 
         [HttpPost]
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {
-            var user = new IdentityUser
+            try
             {
-                UserName = model.UserName,
-                Email = model.Email,
-            };
-
-            var result = await userManager.CreateAsync(user, model.Password);
-
-            if (result.Succeeded)
-            {
-                var createdUser = userManager.Users.SingleOrDefault(x => x.Email.Equals(model.Email));
-                string code = await userManager.GenerateEmailConfirmationTokenAsync(createdUser);
-
-                bool emailSendingResult = await emailService.SendConfirmationEmail(mapper.Map<EmailConfig>(emailConfig), createdUser.Email, createdUser.Id, code);
-
-                return Ok(new { 
-                    jwttoken = GenerateJWTToken(model.Email, createdUser),
-                    isEmailSend = emailSendingResult,
-                });;
+                var result = await accountService.CreateUser(model.Email, model.UserName, model.Password);
+                return new ObjectResult(result) { StatusCode = StatusCodes.Status201Created };
             }
-            else
+            catch(UserCreatingException ex)
             {
-                foreach (var error in result.Errors)
+                foreach (var error in ex.Errors)
                 {
-                    ModelState.AddModelError(error.Code, error.Description);
+                    ModelState.AddModelError("error", error);
                 }
-
                 return ValidationProblem(ModelState);
-            }
+            }            
         }
 
         [HttpPost]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
-            var result = await SignInManager.PasswordSignInAsync(model.Email, model.Password, false, false);
-
-            if (result.Succeeded)
+            try
             {
-                var user = userManager.Users.SingleOrDefault(x => x.Email.Equals(model.Email));                
-                return Ok(new { jwttoken = GenerateJWTToken(user.Email, user) });
+                var result = await accountService.SignIn(model.Email, model.Password);
+                return new ObjectResult(result); 
             }
-
-            ModelState.AddModelError("error", "Неправильный логин или пароль");
-            return ValidationProblem(ModelState);
+            catch (SignInException ex)
+            {
+                foreach (var error in ex.Errors)
+                {
+                    ModelState.AddModelError("error", error);
+                }
+                return ValidationProblem(ModelState);
+            }
         }
 
         [HttpGet]
         public async Task<IActionResult> ConfirmEmail([Required]string userId, [Required]string emailToken)
          {
-            var user = await userManager.FindByIdAsync(userId);
+            var result = await accountService.ConfirmEmail(userId, emailToken);
 
-            if(user != null)
+            if (result)
             {
-                var result = await userManager.ConfirmEmailAsync(user, emailToken);
-
-                if (result.Succeeded)
+                return Ok(new
                 {
-                    return Ok(new {
-                        status = 200,
-                        confirmationResult = true,
-                    });
-                }
+                    status = 200,
+                    confirmationResult = true,
+                });
             }
-
-            ModelState.AddModelError("error", "Something went wrong");
-            return ValidationProblem(ModelState);
+            else
+            {
+                ModelState.AddModelError("error", "Something went wrong");
+                return ValidationProblem(ModelState);
+            }
+            
         }
 
         [HttpGet]
@@ -119,99 +84,14 @@ namespace MyPet.Api.Controllers
 
             try
             {
-                var handler = new JwtSecurityTokenHandler();
-                var token = handler.ReadJwtToken(jwttoken);
-                Dictionary<string, string> claims = new Dictionary<string, string>();
+                var result = await accountService.CheckToken(jwttoken);
 
-               
-                string userId = token.Claims.Where(x => x.Type == "unique_name").FirstOrDefault().Value;
-                bool isEmailConfirmed = await GetIsEmailConfirmed(userId);
-                claims.Add("isEmailConfirmed", isEmailConfirmed.ToString().ToLower());
-
-
-                bool isTokenValid = ValidateToken(jwttoken);
-                claims.Add("tokenValidation",  isTokenValid.ToString().ToLower());
-                
-
-                foreach (var claim in token.Claims)
-                {
-                    claims.Add(claim.Type, claim.Value);
-                }
-
-                return Ok(claims);
+                return Ok(result);
             }
-            catch
+            catch (ArgumentException ex)
             {
-                //ModelState.AddModelError("error", "JwtToken is invalid");
-                // return ValidationProblem(ModelState);
-
-                return Unauthorized();
+                return Unauthorized($"{ex.ParamName} {ex.Message}");
             }
-        }
-
-
-        private string GenerateJWTToken(string email, IdentityUser user)
-        {
-            var claims = new List<Claim>()
-            {
-                new Claim(JwtRegisteredClaimNames.Email, email),
-                new Claim(JwtRegisteredClaimNames.UniqueName, user.Id),
-                new Claim("username", user.UserName),
-            };
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["JwtKey"]));
-
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var expires = DateTime.Now.AddDays(Convert.ToInt32(config["JwtExpireDays"]));
-
-            var token = new JwtSecurityToken(
-                config["JwtIssuer"],
-                config["JwtIssuer"],
-                claims,
-                expires: expires,
-                signingCredentials: credentials
-                );
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-
-        private bool ValidateToken(string token)
-        {
-
-            var mySecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["JwtKey"]));
-            var myIssuer = config["JwtIssuer"];
-            var myAudience = config["JwtIssuer"];
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-
-            try
-            {
-                tokenHandler.ValidateToken(token, new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidIssuer = myIssuer,
-                    ValidAudience = myAudience,
-                    IssuerSigningKey = mySecurityKey
-                }, out SecurityToken validatedToken);
-            }
-            catch
-            {
-                return false;
-            }
-            return true;
-        }
-
-        private async Task<bool> GetIsEmailConfirmed(string userId)
-        {
-            var user = await userManager.FindByIdAsync(userId);
-
-            if (user != null && user.EmailConfirmed == true)
-                return true;
-            else
-                return false;
-        }
+        }       
     }
 }

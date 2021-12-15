@@ -12,6 +12,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MyPet.Api.Models.EmailModels;
 using MyPet.BLL.Interfaces;
+using MyPet.BLL.Models.EmailModels;
 using MyPet.BLL.Services;
 using MyPet.DAL.EF;
 using MyPet.DAL.Interfaces;
@@ -40,21 +41,29 @@ namespace MyPet.Api
             services.AddSingleton(Configuration);
             services.AddScoped<IAdvertisementService, AdvertisementService>();
             services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IAdvertisementRepository, AdvertisementRepository>();
+
+            services.Configure<EmailConfig>(Configuration.GetSection("EmailConfiguration"));
 
             services.AddDbContext<AppDbContext>(options =>
             {
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
             });
+
             services.AddDbContext<UsersDbContext>(options =>
             {
                 options.UseSqlServer(Configuration.GetConnectionString("IdentityConnection"));
             });
+
             services.AddIdentity<IdentityUser, IdentityRole>()
                 .AddEntityFrameworkStores<UsersDbContext>()
                 .AddDefaultTokenProviders();
+
             services.AddControllers();
+
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "MyPet.Api", Version = "v1" });
@@ -81,11 +90,10 @@ namespace MyPet.Api
                         new string[] {}
                     }
                 });
-            });
-
-            services.Configure<EmailConfiguration>(Configuration.GetSection("EmailConfiguration"));
+            });            
 
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -113,9 +121,7 @@ namespace MyPet.Api
 
                 options.User.RequireUniqueEmail = true;
 
-            });
-
-            
+            });            
 
             services.AddCors(options => options.AddDefaultPolicy(config => config
             .AllowAnyOrigin()
@@ -134,7 +140,9 @@ namespace MyPet.Api
             }
 
             app.UseRouting();
+
             app.UseCors();
+
             app.UseStaticFiles();
 
             app.UseAuthentication();
