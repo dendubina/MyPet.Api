@@ -10,7 +10,8 @@ namespace MyPet.Api.Validators
 {
     public class ImageExtensionAttribute : ValidationAttribute
     {
-        private static readonly Dictionary<string, List<byte[]>> fileSignatures = new Dictionary<string, List<byte[]>> {            
+        private static readonly Dictionary<string, List<byte[]>> fileSignatures = new Dictionary<string, List<byte[]>> { 
+            
             {".png", new List<byte[]>
             {
                 new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A },
