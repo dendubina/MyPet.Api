@@ -10,8 +10,8 @@ using MyPet.DAL.EF;
 namespace MyPet.DAL.Migrations.UsersDb
 {
     [DbContext(typeof(UsersDbContext))]
-    [Migration("20211129140440_UsersInitial")]
-    partial class UsersInitial
+    [Migration("20211218183237_Init")]
+    partial class Init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

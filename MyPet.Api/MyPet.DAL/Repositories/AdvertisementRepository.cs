@@ -76,7 +76,15 @@ namespace MyPet.DAL.Repositories
             return ad;
         }
 
+        public async Task<Advertisement> ChangeStatus(int id, string status)
+        {
+            var ad = await context.Advertisements.FindAsync(id);
 
+            ad.Status = status;
+            context.SaveChanges();
+
+            return ad;
+        }
         public IQueryable<Advertisement> GetPagedAds(int pageNumber, int pageSize)
         {
             return context.Advertisements
@@ -86,8 +94,7 @@ namespace MyPet.DAL.Repositories
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .AsNoTracking();                
-        }      
-
+        }
         
     }
 }

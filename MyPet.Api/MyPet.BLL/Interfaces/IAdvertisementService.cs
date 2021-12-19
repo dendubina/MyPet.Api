@@ -15,7 +15,8 @@ namespace MyPet.BLL.Interfaces
         Task<IEnumerable<AdvertisementDTO>> GetFilteredPagedAdvertisementsAsync(int pageNumber, int pageSize, string region, string category, string locationTown);
         Task<IEnumerable<AdvertisementDTO>> GetPagedAdsByUserAsync(string userId, int pageNumber, int pageSize);
         Task<IEnumerable<AdvertisementDTO>> GetAdsByUserAsync(string userId);
-        Task<AdvertisementDTO> UpdateAdvetrtisementAsync(AdvertisementDTO model);
+        Task<AdvertisementDTO> UpdateAdvetrtisementAsync(AdvertisementDTO model, string userId);
+        Task<AdvertisementDTO> ApproveAdStatus(int id);
 
 
         Task<IEnumerable<AdvertisementDTO>> GetAllAdvertisementsAsync();

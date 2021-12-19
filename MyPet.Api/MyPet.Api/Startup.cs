@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,7 +11,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using MyPet.Api.Middlewares;
 using MyPet.Api.Models.EmailModels;
+using MyPet.Api.SignalRHub;
 using MyPet.BLL.Interfaces;
 using MyPet.BLL.Models.EmailModels;
 using MyPet.BLL.Services;
@@ -44,7 +47,7 @@ namespace MyPet.Api
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IAdvertisementRepository, AdvertisementRepository>();
 
-            services.Configure<EmailConfig>(Configuration.GetSection("EmailConfiguration"));
+            services.Configure<EmailConfig>(Configuration.GetSection("EmailConfiguration"));            
 
             services.AddDbContext<AppDbContext>(options =>
             {
@@ -109,6 +112,24 @@ namespace MyPet.Api
                     ValidAudience = Configuration["JwtIssuer"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JwtKey"]))
                 };
+
+                options.Events = new JwtBearerEvents {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];                        
+
+                        
+                        var path = context.HttpContext.Request.Path.ToString();
+
+                        // если запрос направлен хабу
+                        if (!string.IsNullOrWhiteSpace(accessToken) && (path.Contains("hubs/chat")))
+                        {
+                            // получаем токен из строки запроса
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
             services.Configure<IdentityOptions>(options =>
@@ -121,12 +142,32 @@ namespace MyPet.Api
 
                 options.User.RequireUniqueEmail = true;
 
-            });            
+            });
 
-            services.AddCors(options => options.AddDefaultPolicy(config => config
-            .AllowAnyOrigin()
+            /*services.AddCors(options => options.AddDefaultPolicy(config => config
+            .WithOrigins("http://localhost:3000")
             .AllowAnyHeader()
-            .AllowAnyMethod()));
+            .AllowAnyMethod()
+            .AllowCredentials()));*/
+            services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(p =>
+                {
+                    p.AllowAnyHeader();
+                    p.WithOrigins("http://localhost:3000", "http://localhost:3001");
+                    p.AllowAnyHeader();
+                    p.AllowAnyMethod();
+                    p.AllowCredentials();
+                    p.Build();
+                });
+            });
+
+            services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
+            services.AddSignalR(hubOptions =>
+            {
+                hubOptions.EnableDetailedErrors = true;
+                //hubOptions.KeepAliveInterval = System.TimeSpan.FromMinutes(1);
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -139,18 +180,23 @@ namespace MyPet.Api
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MyPet.Api v1"));
             }
 
-            app.UseRouting();
+           // app.UseHttpsRedirection();
 
-            app.UseCors();
+            app.UseRouting();                        
 
             app.UseStaticFiles();
 
             app.UseAuthentication();
-            app.UseAuthorization();
+            app.UseAuthorization();            
+
+            app.UseCors();
+
+            app.UseMiddleware<CustomExceptionHandlerMiddleware>();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<ChatHub>("hubs/chat");
             });
         }
     }

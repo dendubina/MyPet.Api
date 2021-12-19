@@ -12,7 +12,7 @@ namespace MyPet.DAL.Interfaces
         Task<IEnumerable<Advertisement>> GetPagedListAsync(int pageNumber, int pageSize, string category, string locationTown);
         Task<IEnumerable<Advertisement>> GetAdsByUserAsync(string userId);
         Task<IEnumerable<Advertisement>> GetPagedListByUserAsync(string userId, int pageNumber, int pageSize);
-
+        Task<Advertisement> ChangeStatus(int id, string status);
         IQueryable<Advertisement> GetPagedAds(int pageNumber, int pageSize);
         
     }

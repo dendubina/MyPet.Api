@@ -21,8 +21,7 @@ using System.Threading.Tasks;
 namespace MyPet.Api.Controllers
 {
     [Route("[controller]/[action]")]
-    [ApiController]
-    [Authorize]
+    [ApiController]    
     public class AdvertisementController : ControllerBase
     {
         private readonly ILogger<AdvertisementController> _logger;
@@ -42,6 +41,7 @@ namespace MyPet.Api.Controllers
             this.userManager = userManager;
         }
 
+        [Authorize]
         [HttpPut]        
         public async Task<IActionResult> AddAdvertisement([FromForm] AdvertisementModel model)
         {
@@ -108,7 +108,7 @@ namespace MyPet.Api.Controllers
         }
 
         [HttpGet]
-        [AllowAnonymous]
+        [AllowAnonymous]       
         public async Task<IActionResult> GetAdvertisementById([Required] int id)
         {
             var ad = await adService.GetAdvertisementByIdAsync(id);
@@ -131,6 +131,7 @@ namespace MyPet.Api.Controllers
             return Ok(result);            
         }
 
+        [Authorize]
         [HttpGet]        
         public async Task<IActionResult> GetAdsByUser()
         {
@@ -142,6 +143,7 @@ namespace MyPet.Api.Controllers
             return Ok(result);           
         }
 
+        [Authorize]
         [HttpGet]        
         public async Task<IActionResult> GetUsersAdsPagedList([FromQuery] AdPagedRequestParameters parameters)
         {
@@ -153,6 +155,7 @@ namespace MyPet.Api.Controllers
             return Ok(result);            
         }
 
+        [Authorize]
         [HttpDelete]        
         public async Task<IActionResult> DeleteAdvertisement([Required] int id)
         {
@@ -160,7 +163,7 @@ namespace MyPet.Api.Controllers
             var user = await userManager.FindByIdAsync(userId);
             var ad = await adService.GetAdvertisementByIdAsync(id);
 
-            if(user == null || ad == null || userId != ad.UserId)
+            if(ad == null || userId != ad.UserId)
             {
                 ModelState.AddModelError("error", "something went wrong");
                 return ValidationProblem(ModelState);
@@ -173,18 +176,21 @@ namespace MyPet.Api.Controllers
             return Ok(responseModel);
         }
 
+        [HttpPost]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> ApproveAdStatus ([Required] int id)
+        {
+            var ad = await adService.ApproveAdStatus(id);
+            var result = mapper.Map<AdvertisementResponseModel>(ad);
+
+            return Ok(result);
+        }
+
+        [Authorize]
         [HttpPost]        
         public async Task<IActionResult> UpdateAdvertisement([FromForm] UpdatedAdvertisementModel model)
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
-            var user = await userManager.FindByIdAsync(userId);
-            var ad = await adService.GetAdvertisementByIdAsync(model.AdId);
-
-            if (user == null || ad == null || userId != ad.UserId)
-            {
-                ModelState.AddModelError("error", "something went wrong");
-                return ValidationProblem(ModelState);
-            }
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;           
 
             LocationDTO locDto = new LocationDTO
             {
@@ -215,11 +221,9 @@ namespace MyPet.Api.Controllers
                     Path = pathToImg,
                     Size = model.Image.Length,
                 });
-            }
-           
-            
+            }          
 
-            var updatedAd = await adService.UpdateAdvetrtisementAsync(newAd);
+            var updatedAd = await adService.UpdateAdvetrtisementAsync(newAd, userId);
 
             var responseModel = mapper.Map<AdvertisementResponseModel>(updatedAd);            
 

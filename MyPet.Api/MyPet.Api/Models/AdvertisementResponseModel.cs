@@ -16,6 +16,7 @@ namespace MyPet.Api.Models
         public string Description { get; set; }
         public List<ImageDTO> Images { get; set; }
         public string Category { get; set; }
+        public string Status { get; set; }
 
 
         public string PetName { get; set; }

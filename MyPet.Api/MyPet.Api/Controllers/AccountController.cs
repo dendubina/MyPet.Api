@@ -24,37 +24,15 @@ namespace MyPet.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {
-            try
-            {
-                var result = await accountService.CreateUser(model.Email, model.UserName, model.Password);
-                return new ObjectResult(result) { StatusCode = StatusCodes.Status201Created };
-            }
-            catch(UserCreatingException ex)
-            {
-                foreach (var error in ex.Errors)
-                {
-                    ModelState.AddModelError("error", error);
-                }
-                return ValidationProblem(ModelState);
-            }            
+            var result = await accountService.CreateUser(model.Email, model.UserName, model.Password);
+            return new ObjectResult(result) { StatusCode = StatusCodes.Status201Created };
         }
 
         [HttpPost]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
-        {
-            try
-            {
-                var result = await accountService.SignIn(model.Email, model.Password);
-                return new ObjectResult(result); 
-            }
-            catch (SignInException ex)
-            {
-                foreach (var error in ex.Errors)
-                {
-                    ModelState.AddModelError("error", error);
-                }
-                return ValidationProblem(ModelState);
-            }
+        {            
+            var result = await accountService.SignIn(model.Email, model.Password);
+            return Ok(result);
         }
 
         [HttpGet]
@@ -62,36 +40,19 @@ namespace MyPet.Api.Controllers
          {
             var result = await accountService.ConfirmEmail(userId, emailToken);
 
-            if (result)
+            return Ok(new
             {
-                return Ok(new
-                {
-                    status = 200,
-                    confirmationResult = true,
-                });
-            }
-            else
-            {
-                ModelState.AddModelError("error", "Something went wrong");
-                return ValidationProblem(ModelState);
-            }
-            
+                status = 200,
+                confirmationResult = result,
+            });
+
         }
 
         [HttpGet]
         public async Task<IActionResult> CheckToken([Required]string jwttoken)
-        {            
-
-            try
-            {
-                var result = await accountService.CheckToken(jwttoken);
-
-                return Ok(result);
-            }
-            catch (ArgumentException ex)
-            {
-                return Unauthorized($"{ex.ParamName} {ex.Message}");
-            }
+        {
+            var result = await accountService.CheckToken(jwttoken);
+            return Ok(result);
         }       
     }
 }
