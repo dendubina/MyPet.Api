@@ -107,18 +107,14 @@ namespace MyPet.Api.Controllers
             return Ok(result);            
         }
 
-        [HttpGet]
+        [HttpGet]        
         [AllowAnonymous]       
         public async Task<IActionResult> GetAdvertisementById([Required] int id)
         {
             var ad = await adService.GetAdvertisementByIdAsync(id);
             var result = mapper.Map<AdvertisementResponseModel>(ad);
-
-            if (result != null)
-                return new ObjectResult(result);
-            else
-                ModelState.AddModelError("id", "Ad not found");
-            return ValidationProblem(ModelState);
+           
+            return Ok(result);                
         }             
 
         [HttpGet]
@@ -159,17 +155,8 @@ namespace MyPet.Api.Controllers
         [HttpDelete]        
         public async Task<IActionResult> DeleteAdvertisement([Required] int id)
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
-            var user = await userManager.FindByIdAsync(userId);
-            var ad = await adService.GetAdvertisementByIdAsync(id);
-
-            if(ad == null || userId != ad.UserId)
-            {
-                ModelState.AddModelError("error", "something went wrong");
-                return ValidationProblem(ModelState);
-            }
-
-            var deletedAd = await adService.DeleteAdvertisementAsync(id);
+            string userId = User.Claims.FirstOrDefault(c => c.Type == "unique_name").Value;
+            var deletedAd = await adService.DeleteAdvertisementAsync(id, userId);
 
             var responseModel = mapper.Map<AdvertisementResponseModel>(deletedAd);
 

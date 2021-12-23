@@ -76,16 +76,44 @@ namespace MyPet.BLL.Services
 
         public async Task<AdvertisementDTO> GetAdvertisementByIdAsync(int id)
         {
-            var ad = await adRepo.GetByIdAsync(id);           
+            var ad = await adRepo.GetByIdAsync(id);
+
+            if (ad == null)
+            {
+                logger.LogWarning($"Attempt to get advertisement with id '{id}' that not found");
+                throw new NotFoundException($"Advertisement with id '{id}' was not found");
+            }
+                
 
             return mapper.Map<AdvertisementDTO>(ad);
         }        
 
-        public async Task<AdvertisementDTO> DeleteAdvertisementAsync(int id)
+        public async Task<AdvertisementDTO> DeleteAdvertisementAsync(int id, string userId)
         {
-            var ad = await adRepo.DeleteAsync(id);
+            var adTodelete = await adRepo.GetByIdAsync(id);
+            var user = await userManager.FindByIdAsync(userId);
 
-            return mapper.Map<AdvertisementDTO>(ad);
+            if (user == null)
+            {
+                logger.LogWarning($"Unauthorized user with id '{userId}' was trying to delete ad with id '{id}'");
+                throw new UnauthorizedAccessException("Unauthorized access");
+            }            
+
+            if (adTodelete == null)
+            {
+                logger.LogWarning($"user with Id {userId} was trying to delete advertisement that was not found. Id: {id}");
+                throw new NotFoundException($"Advertisement with Id {id} was not found to delete");
+            }
+
+            if (adTodelete.UserId != userId)
+            {
+                logger.LogWarning($"user with Id '{userId} was trying to update ad with id {id} having no permission to delete advertisement'");
+                throw new ForbiddenAccessException("You don't have permission to delete this advertisement");
+            }
+
+            var result = await adRepo.DeleteAsync(id);
+
+            return mapper.Map<AdvertisementDTO>(result);
         }
         
         public async Task<IEnumerable<AdvertisementDTO>> GetFilteredPagedAdvertisementsAsync(int pageNumber, int pageSize, string region, string category, string locationTown)
@@ -149,11 +177,9 @@ namespace MyPet.BLL.Services
             {
                 logger.LogWarning($"user with Id {model.Id} was trying to update advertisement that was not found. Id: {model.Id}");
                 throw new NotFoundException($"Advertisement with Id {model.Id} was not found");
-            }
-
-            var roles = await userManager.GetRolesAsync(user);
+            }           
             
-            if(!roles.Contains("admin") || adToUpdate.UserId != userId)
+            if(adToUpdate.UserId != userId)
             {
                 logger.LogWarning($"user with Id '{userId} was trying to update ad with id {model.Id} having no permission to do that'");
                 throw new ForbiddenAccessException("You don't have permission to update this advertisement");

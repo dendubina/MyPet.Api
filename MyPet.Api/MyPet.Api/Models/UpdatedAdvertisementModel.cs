@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using MyPet.Api.Validators;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -26,6 +27,8 @@ namespace MyPet.Api.Models
         [Required]
         public string Category { get; set; }
 
+        [ImageExtensionAttribute(ErrorMessage = "Wrong file extension")]
+        [MaxImageSizeMBAttribute(ErrorMessage = "Wrong image size")]
         public IFormFile Image { get; set; }
     }
 }

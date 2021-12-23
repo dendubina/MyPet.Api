@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 namespace MyPet.Api.SignalRHub.Models
 {
     public class ChatMessage
-    {
-        public string User { get; set; }
+    {       
         public string Message { get; set; }
         public string ToUserId { get; set; }
     }

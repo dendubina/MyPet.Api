@@ -14,19 +14,13 @@ namespace MyPet.Api.SignalRHub
         [Authorize]
         public async Task SendMessage(ChatMessage message)
         {
-            /* var id = Context.User.Claims;
-             var userId = Context.User.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;            
+            List<string> userIds = new List<string> {
+                message.ToUserId,
+                Context.UserIdentifier,
+            };
 
-             var context = Context.GetHttpContext();*/
-
-            // var userid = Context.UserIdentifier;
-
-          //  IReadOnlyList<string> userIds = new IReadOnlyList<string>();
-
-            if (Context.UserIdentifier != message.ToUserId) // если получатель и текущий пользователь не совпадают
-                await Clients.User(message.ToUserId).ReceiveMessage(message);
-
-           // await Clients.All.ReceiveMessage(message);
+            await Clients.Users(userIds).ReceiveMessage(message);
+            
         }
     }
 }

@@ -60,6 +60,7 @@ namespace MyPet.DAL.Repositories
 
             if(entity.Images.Count() > 0)
             {
+                ad.Images.Clear();
                 ad.Images = entity.Images;
             }
 
@@ -85,6 +86,7 @@ namespace MyPet.DAL.Repositories
 
             return ad;
         }
+
         public IQueryable<Advertisement> GetPagedAds(int pageNumber, int pageSize)
         {
             return context.Advertisements
