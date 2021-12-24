@@ -1,4 +1,5 @@
 ﻿using MyPet.Api.SignalRHub.Models;
+using MyPet.BLL.Models.Chat;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +9,6 @@ namespace MyPet.Api.SignalRHub.Clients
 {
    public interface IChatClient
     {
-        Task ReceiveMessage(ChatMessage message);
+        Task ReceiveMessage(MessageResponseModel message);
     }
 }

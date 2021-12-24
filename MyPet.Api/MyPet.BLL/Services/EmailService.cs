@@ -1,5 +1,6 @@
 ﻿using MailKit.Net.Smtp;
 using MailKit.Security;
+using Microsoft.Extensions.Logging;
 using MimeKit;
 using MyPet.BLL.Interfaces;
 using MyPet.BLL.Models.EmailModels;
@@ -13,6 +14,12 @@ namespace MyPet.BLL.Services
 {
     public class EmailService : IEmailService
     {
+        private readonly ILogger<EmailService> logger;
+
+        public EmailService(ILogger<EmailService> logger)
+        {
+            this.logger = logger;
+        }
 
         public async Task<bool> SendConfirmationEmail(EmailConfig emailConfig, string to, string userId, string emailToken)
         {
@@ -50,10 +57,12 @@ namespace MyPet.BLL.Services
                     await client.SendAsync(message);
                     await client.DisconnectAsync(true);
                 }
+                logger.LogInformation($"email confirmation has been send to user with id '{userId}'. Email address: {to}");
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                logger.LogError($"Exception catched while sending confirmation email to user with id '{userId}'. Email adress: {to}. Exception message: {ex.Message}. StackTrace: \r\n {ex.StackTrace}");
                 return false;
             }
         }

@@ -11,7 +11,7 @@ namespace MyPet.Api.SignalRHub
 {
     public class ChatHub : Hub<IChatClient>
     {
-        [Authorize]
+        /*[Authorize]
         public async Task SendMessage(ChatMessage message)
         {
             List<string> userIds = new List<string> {
@@ -21,6 +21,6 @@ namespace MyPet.Api.SignalRHub
 
             await Clients.Users(userIds).ReceiveMessage(message);
             
-        }
+        }*/
     }
 }

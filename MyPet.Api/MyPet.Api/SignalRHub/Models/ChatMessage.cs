@@ -9,5 +9,6 @@ namespace MyPet.Api.SignalRHub.Models
     {       
         public string Message { get; set; }
         public string ToUserId { get; set; }
+        public int? ToChatId { get; set; }
     }
 }

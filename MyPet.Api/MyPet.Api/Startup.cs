@@ -47,6 +47,9 @@ namespace MyPet.Api
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IAdvertisementRepository, AdvertisementRepository>();
 
+            services.AddScoped<IChatRepository, ChatRepository>();
+            services.AddScoped<IChatService, ChatService>();
+
             services.Configure<EmailConfig>(Configuration.GetSection("EmailConfiguration"));            
 
             services.AddDbContext<AppDbContext>(options =>

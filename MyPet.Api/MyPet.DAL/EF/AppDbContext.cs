@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MyPet.DAL.Entities;
+using MyPet.DAL.Entities.Chat;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,8 @@ namespace MyPet.DAL.EF
         public DbSet<Location> Locations { get; set; }
         public DbSet<Advertisement> Advertisements { get; set; }
         public DbSet<Image> Images { get; set; }
+        public DbSet<Chat> Chats { get; set; }
+        public DbSet<Message> Messages { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
@@ -40,6 +43,12 @@ namespace MyPet.DAL.EF
                 .HasOne(p => p.Pet)
                 .WithOne(p => p.Advertisement)
                 .HasForeignKey<Pet>(p => p.AdId);
+
+
+            modelBuilder.Entity<Chat>()
+                .HasMany(x => x.Messages)
+                .WithOne(x => x.Chat)
+                .HasForeignKey(x => x.ChatId);
 
 
 

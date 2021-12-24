@@ -11,7 +11,7 @@ namespace MyPet.Api.SignalRHub
     {
         public virtual string GetUserId(HubConnectionContext connection)
         {
-            return connection.User.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;            
+            return connection.User.Claims.FirstOrDefault(c => c.Type == "unique_name").Value;            
 
             //return connection.User?.Identity.Name;
             // или так
