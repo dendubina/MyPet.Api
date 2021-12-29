@@ -9,6 +9,7 @@ using MyPet.BLL.DTO;
 using MyPet.BLL.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -31,9 +32,9 @@ namespace MyPet.Api.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task SendMessage(ChatMessage message)
+        public async Task<IActionResult> SendMessage(ChatMessage message)
         {
-            var requestingUserId = User.Claims.FirstOrDefault(c => c.Type == "unique_name").Value;
+            var requestingUserId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.UniqueName).Value;
 
             MessageDTO messageDto = new MessageDTO
             {
@@ -50,17 +51,27 @@ namespace MyPet.Api.Controllers
             };
 
             await chatHub.Clients.Users(usersToReceiveMessage).ReceiveMessage(responseModel);
+            return Ok(responseModel);
         }
 
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> GetChatsByUser()
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == "unique_name").Value;
+            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.UniqueName).Value;
 
             var chats = await chatService.GetChatsByUserId(userId);
 
             return Ok(chats);
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> GetChatMessagesById(int id)
+        {
+            var messages = await chatService.GetChatMessagesById(id);
+
+            return Ok(messages);
         }
     }
 }

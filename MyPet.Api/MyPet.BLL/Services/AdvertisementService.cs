@@ -24,18 +24,14 @@ namespace MyPet.BLL.Services
         private readonly ILogger<AdvertisementService> logger;
         private readonly UserManager<IdentityUser> userManager;
         
-        private readonly bool isModerationEnabled;
+        private readonly bool isModerationEnabled;         
 
-       /* private const string OnModerationStatus = "OnModeration";
-        private const string RejectedStatus = "Rejected";
-        private const string ApprovedStatus = "Approved";*/
-
-        private enum AdStatus
+        private struct AdStatuses
         {
-            OnModeration,
-            Rejected,
-            Approved,
-        };
+            public const string OnModeration = "OnModeration";
+            public const string Rejected = "Rejected";
+            public const string Approved = "Approved";
+        }
 
 
         public AdvertisementService(IAdvertisementRepository adRepo, IMapper mapper, IConfiguration config, ILogger<AdvertisementService> logger, UserManager<IdentityUser> userManager)
@@ -52,9 +48,9 @@ namespace MyPet.BLL.Services
             string status;
 
             if (isModerationEnabled)
-                status = AdStatus.OnModeration.ToString();
+                status = AdStatuses.OnModeration;
             else
-                status = AdStatus.Approved.ToString();
+                status = AdStatuses.Approved;
 
 
             Pet pet = mapper.Map<Pet>(model.Pet);           
@@ -83,8 +79,6 @@ namespace MyPet.BLL.Services
                 logger.LogWarning($"Attempt to get advertisement with id '{id}' that not found");
                 throw new NotFoundException($"Advertisement with id '{id}' was not found");
             }
-                
-
             return mapper.Map<AdvertisementDTO>(ad);
         }        
 
@@ -118,12 +112,12 @@ namespace MyPet.BLL.Services
         
         public async Task<IEnumerable<AdvertisementDTO>> GetFilteredPagedAdvertisementsAsync(int pageNumber, int pageSize, string region, string category, string locationTown)
         {
-            var ads = adRepo.GetPagedAds(pageNumber, pageSize).Where(x => x.Status != AdStatus.Rejected.ToString());
+            var ads = adRepo.GetPagedAds(pageNumber, pageSize).Where(x => x.Status != AdStatuses.Rejected);
 
             if (isModerationEnabled)
             {
                 ads = ads
-                    .Where(x => x.Status == AdStatus.Approved.ToString());
+                    .Where(x => x.Status == AdStatuses.Approved);
             }
 
             if (!string.IsNullOrWhiteSpace(category))
@@ -145,8 +139,7 @@ namespace MyPet.BLL.Services
             var result = await ads.ToListAsync();
             
 
-            return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(result);
-           
+            return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(result);           
         }
 
         public async Task<IEnumerable<AdvertisementDTO>> GetPagedAdsByUserAsync(string userId, int pageNumber, int pageSize)
@@ -211,8 +204,8 @@ namespace MyPet.BLL.Services
                 throw new NotFoundException($"Can't approve, Advertisement with id '{id}' was not found");
             }
 
-            var result = await adRepo.ChangeStatus(id, AdStatus.Approved.ToString());
-            logger.LogInformation($"Ad's status with id '{id} has been changed to '{AdStatus.Approved.ToString()}'");
+            var result = await adRepo.ChangeStatus(id, AdStatuses.Approved);
+            logger.LogInformation($"Ad's status with id '{id} has been changed to '{AdStatuses.Approved}'");
 
             return mapper.Map<AdvertisementDTO>(result);
         }

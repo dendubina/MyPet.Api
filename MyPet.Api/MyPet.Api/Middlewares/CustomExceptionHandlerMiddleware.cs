@@ -69,7 +69,7 @@ namespace MyPet.Api.Middlewares
             var responseModel = new
             {
                 Succeeded = false,
-                StatusCode = context.Response.StatusCode,                
+                Status = context.Response.StatusCode,                
                 Message = exception.Message,
                 Errors = errors,                
             };

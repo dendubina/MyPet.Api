@@ -11,6 +11,6 @@ namespace MyPet.BLL.Models.Chat
         public int Id { get; set; }
         public string WithUserId { get; set; }
         public string WithUserName { get; set; }
-        public int MessagesCount { get; set; }
+      //  public int MessagesCount { get; set; }
     }
 }

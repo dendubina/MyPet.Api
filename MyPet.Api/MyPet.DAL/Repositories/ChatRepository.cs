@@ -20,7 +20,8 @@ namespace MyPet.DAL.Repositories
         public async Task<IEnumerable<Chat>> GetChatsByUserId(string userId)
         {
             return await context.Chats
-                .Where(x => x.FirstUserId == userId || x.SecondUserId == userId)
+                .Where(x => x.FirstUserId == userId || x.SecondUserId == userId)               
+                .AsNoTracking()
                 .ToListAsync();
         }
 
@@ -59,6 +60,17 @@ namespace MyPet.DAL.Repositories
                 }
             }
 
+        }
+
+        public async Task<IEnumerable<Message>> GetMessagesByChatId(int id)
+        {
+            var chat = await context.Chats
+                .Where(x => x.Id == id)
+                .Include(x => x.Messages)
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
+
+            return chat.Messages;
         }
 
         public override Task<Chat> Update(int id, Chat entity)

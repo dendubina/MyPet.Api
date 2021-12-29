@@ -31,23 +31,18 @@ namespace MyPet.BLL.Services
         }
         public async Task<MessageResponseModel> AddMessageToChat(MessageDTO message, int? chatId)
         {
+            var FromUser = await userManager.FindByIdAsync(message.FromUserId);
+            var ToUser = await userManager.FindByIdAsync(message.ToUserId);
+
             message.isRead = false;
             message.SendingDate = DateTime.Now;
+            message.FromUserName = FromUser.UserName;
+            message.ToUserName = ToUser.UserName;
 
             var messagetoAdd = mapper.Map<Message>(message);
+            await chatRepo.AddMessageToChat(messagetoAdd, chatId);            
 
-            await chatRepo.AddMessageToChat(messagetoAdd, chatId);
-
-            MessageResponseModel responseModel = new MessageResponseModel
-            {
-                FromUserId = message.FromUserId,
-                ToUserId = message.ToUserId,
-                isRead = message.isRead,
-                SendingDate = message.SendingDate,
-                Text = message.Text,
-            };
-
-            return responseModel;
+            return mapper.Map<MessageResponseModel>(message);
         }
 
         public async Task<IEnumerable<ChatResponseModel>> GetChatsByUserId(string userId)
@@ -87,11 +82,18 @@ namespace MyPet.BLL.Services
                     Id = chat.Id,
                     WithUserId = secondUser.Id,
                     WithUserName = secondUser.UserName,
-                    MessagesCount = chat.Messages.Count(),
+                  //  MessagesCount = chat.Messages.Count(),
                 });
             }
 
             return resultChats;
-        }        
+        }
+
+        public async Task<IEnumerable<MessageResponseModel>> GetChatMessagesById(int id)
+        {
+            var messages = await chatRepo.GetMessagesByChatId(id);
+
+            return mapper.Map<IEnumerable<Message>, IEnumerable<MessageResponseModel>>(messages);
+        }
     }
 }

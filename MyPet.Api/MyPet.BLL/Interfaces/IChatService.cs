@@ -12,5 +12,6 @@ namespace MyPet.BLL.Interfaces
     {
         Task<IEnumerable<ChatResponseModel>> GetChatsByUserId(string userId);        
         Task<MessageResponseModel> AddMessageToChat(MessageDTO message, int? chatId);
+        Task<IEnumerable<MessageResponseModel>> GetChatMessagesById(int id);
     }
 }

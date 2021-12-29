@@ -15,6 +15,10 @@ namespace MyPet.DAL.Entities.Chat
         [Required]
         public string ToUserId { get; set; }
         [Required]
+        public string ToUserName { get; set; }
+        [Required]
+        public string FromUserName { get; set; }
+        [Required]
         public DateTime SendingDate { get; set; }
         [Required]
         public bool isRead { get; set; }

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using MyPet.BLL.DTO;
+using MyPet.BLL.Models.Chat;
 using MyPet.DAL.Entities;
 using MyPet.DAL.Entities.Chat;
 using System;
@@ -23,6 +24,8 @@ namespace MyPet.BLL.Infrastructure
 
             CreateMap<Chat, ChatDTO>().ReverseMap();
             CreateMap<Message, MessageDTO>().ReverseMap();
+            CreateMap<Message, MessageResponseModel>().ReverseMap();
+            CreateMap<MessageDTO, MessageResponseModel>().ReverseMap();
         }
     }
 }

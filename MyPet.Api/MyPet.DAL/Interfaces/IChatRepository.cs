@@ -11,5 +11,6 @@ namespace MyPet.DAL.Interfaces
     {
         Task<IEnumerable<Chat>> GetChatsByUserId(string userId);
         Task AddMessageToChat(Message message, int? chatId);
+        Task<IEnumerable<Message>> GetMessagesByChatId(int id);
     }
 }
