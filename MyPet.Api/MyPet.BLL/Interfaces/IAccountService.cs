@@ -11,6 +11,6 @@ namespace MyPet.BLL.Interfaces
         Task<object> CreateUser(string email, string username, string password);
         Task<object> SignIn(string email, string password);
         Task<bool> ConfirmEmail(string userId, string emailToken);
-        Task<Dictionary<string, string>> CheckToken(string jwttoken);
+        Task<object> CheckToken(string jwttoken);
     }
 }

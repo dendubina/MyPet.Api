@@ -107,7 +107,7 @@ namespace MyPet.Api.Controllers
             return Ok(result);            
         }
 
-        [HttpGet]        
+        [HttpGet]
         [AllowAnonymous]       
         public async Task<IActionResult> GetAdvertisementById([Required] int id)
         {
@@ -118,7 +118,7 @@ namespace MyPet.Api.Controllers
         }             
 
         [HttpGet]
-        [AllowAnonymous]
+        [AllowAnonymous]       
         public async Task<IActionResult> GetAdsPagedList([FromQuery] AdPagedRequestParameters parameters)
         {
             var ads = await adService.GetFilteredPagedAdvertisementsAsync(parameters.PageNumber, parameters.PageSize, parameters.LocationRegion, parameters.Category, parameters.LocationTown);

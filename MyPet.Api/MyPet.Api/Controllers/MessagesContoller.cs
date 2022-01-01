@@ -36,6 +36,12 @@ namespace MyPet.Api.Controllers
         {
             var requestingUserId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.UniqueName).Value;
 
+            if(message.ToUserId == requestingUserId)
+            {
+                ModelState.AddModelError("userId", "sender and receiver are the same");
+                return ValidationProblem(ModelState);
+            }
+
             MessageDTO messageDto = new MessageDTO
             {
                 FromUserId = requestingUserId,

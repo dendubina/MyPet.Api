@@ -66,7 +66,7 @@ namespace MyPet.Api
                 .AddEntityFrameworkStores<UsersDbContext>()
                 .AddDefaultTokenProviders();
 
-            services.AddControllers();
+            services.AddControllers();                
 
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
@@ -113,7 +113,11 @@ namespace MyPet.Api
                 {
                     ValidIssuer = Configuration["JwtIssuer"],
                     ValidAudience = Configuration["JwtIssuer"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JwtKey"]))
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JwtKey"])),
+                    ValidateIssuerSigningKey = true,
+
+                    ClockSkew = TimeSpan.Zero,
+                    ValidateLifetime = true,
                 };
 
                 options.Events = new JwtBearerEvents {
@@ -148,10 +152,11 @@ namespace MyPet.Api
             });
 
             /*services.AddCors(options => options.AddDefaultPolicy(config => config
-            .WithOrigins("http://localhost:3000")
+            .AllowAnyOrigin()
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowCredentials()));*/
+            //.AllowCredentials()
+            ));*/
             services.AddCors(options =>
             {
                 options.AddDefaultPolicy(p =>
@@ -168,8 +173,7 @@ namespace MyPet.Api
             services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
             services.AddSignalR(hubOptions =>
             {
-                hubOptions.EnableDetailedErrors = true;
-                //hubOptions.KeepAliveInterval = System.TimeSpan.FromMinutes(1);
+                hubOptions.EnableDetailedErrors = true;               
             });
         }
 
@@ -183,16 +187,20 @@ namespace MyPet.Api
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MyPet.Api v1"));
             }
 
-           // app.UseHttpsRedirection();
+            app.UseCors();
 
             app.UseRouting();                        
 
-            app.UseStaticFiles();
+            app.UseStaticFiles(new StaticFileOptions()
+            {
+                OnPrepareResponse = ctx =>
+                {
+                    ctx.Context.Response.Headers.Add("Cache-Control", "public, max-age=3600");
+                }
+            });
 
             app.UseAuthentication();
             app.UseAuthorization();            
-
-            app.UseCors();
 
             app.UseMiddleware<CustomExceptionHandlerMiddleware>();
 

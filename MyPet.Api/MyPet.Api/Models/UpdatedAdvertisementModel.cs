@@ -28,7 +28,7 @@ namespace MyPet.Api.Models
         public string Category { get; set; }
 
         [ImageExtensionAttribute(ErrorMessage = "Wrong file extension")]
-        [MaxImageSizeMBAttribute(ErrorMessage = "Wrong image size")]
+        [MaxImageSizeMBAttribute(ErrorMessage = "Wrong image size")]         
         public IFormFile Image { get; set; }
     }
 }

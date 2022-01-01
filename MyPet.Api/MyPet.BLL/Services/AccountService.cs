@@ -91,12 +91,8 @@ namespace MyPet.BLL.Services
             var result = await signInManager.PasswordSignInAsync(user.UserName, password, false, false);
 
             if (result.Succeeded)
-            {                
-
-                return new
-                {
-                    jwttoken = await GenerateJWTToken(user)
-                };
+            { 
+                return await GetTokenData(await GenerateJWTToken(user), user);
             }
             else
                 throw new SignInException("wrong email or password", new List<string> {"wrong email or password"});
@@ -123,30 +119,16 @@ namespace MyPet.BLL.Services
             }
         }
 
-        public async Task<Dictionary<string, string>> CheckToken(string jwttoken)
+        public async Task<object> CheckToken(string jwttoken)
         {
             try
             {
                 var handler = new JwtSecurityTokenHandler();
                 var token = handler.ReadJwtToken(jwttoken);
-
-                Dictionary<string, string> claims = new Dictionary<string, string>();
-                foreach (var claim in token.Claims)
-                {
-                    claims.Add(claim.Type, claim.Value);
-                }
-
-
                 string userId = token.Claims.Where(x => x.Type == "unique_name").FirstOrDefault().Value;
-                bool isEmailConfirmed = await GetIsEmailConfirmed(userId);
-                claims.Add("isEmailConfirmed", isEmailConfirmed.ToString().ToLower());
+                var user = await userManager.FindByIdAsync(userId);                               
 
-
-                bool isTokenValid = ValidateToken(jwttoken);
-                claims.Add("tokenValidation", isTokenValid.ToString().ToLower());
-                               
-
-                return claims;
+                return await GetTokenData(jwttoken, user);
             }
             catch
             {
@@ -156,7 +138,7 @@ namespace MyPet.BLL.Services
 
         private async Task<string> GenerateJWTToken(IdentityUser user)
         {
-
+            
             var claims = new List<Claim>()
             {
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),                
@@ -175,7 +157,8 @@ namespace MyPet.BLL.Services
 
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var expires = DateTime.Now.AddDays(Convert.ToInt32(config["JwtExpireDays"]));
+             var expires = DateTime.Now.AddDays(Convert.ToInt32(config["JwtExpireDays"]));            
+           // var expires = DateTime.Now.AddSeconds(30);
 
             var token = new JwtSecurityToken(
                 config["JwtIssuer"],
@@ -186,6 +169,28 @@ namespace MyPet.BLL.Services
                 );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        private async Task<object> GetTokenData(string token, IdentityUser user)
+        {
+            var userRoles = await userManager.GetRolesAsync(user);
+            List<string> rolesList = new List<string>();
+
+            foreach (var role in userRoles)
+            {
+                rolesList.Add(role);
+            }            
+
+            return new
+            {
+                userId = user.Id,
+                userName = user.UserName,
+                email = user.Email,
+                isEmailConfirmed = user.EmailConfirmed,
+                tokenValidation = ValidateToken(token),
+                jwtToken = token,
+                roles = rolesList,
+            };
         }
 
         private bool ValidateToken(string token)
@@ -204,6 +209,10 @@ namespace MyPet.BLL.Services
                     ValidateIssuerSigningKey = true,
                     ValidateIssuer = true,
                     ValidateAudience = true,
+
+                    ClockSkew = TimeSpan.Zero,
+                    ValidateLifetime = true,
+
                     ValidIssuer = myIssuer,
                     ValidAudience = myAudience,
                     IssuerSigningKey = mySecurityKey
@@ -214,16 +223,7 @@ namespace MyPet.BLL.Services
                 return false;
             }
             return true;
-        }
-
-        private async Task<bool> GetIsEmailConfirmed(string userId)
-        {
-            var user = await userManager.FindByIdAsync(userId);
-
-            if (user != null && user.EmailConfirmed == true)
-                return true;
-            else
-                return false;
-        }
+        }        
+        
     }
 }

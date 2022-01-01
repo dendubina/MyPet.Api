@@ -36,6 +36,9 @@ namespace MyPet.Api.Validators
 
         public override bool IsValid(object value)
         {
+            if (value == null)
+                return true;
+
             var file = value as IFormFile;
             var ext = Path.GetExtension(file.FileName).ToLower();
             
