@@ -12,6 +12,7 @@ using MyPet.BLL.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -45,7 +46,7 @@ namespace MyPet.Api.Controllers
         [HttpPut]        
         public async Task<IActionResult> AddAdvertisement([FromForm] AdvertisementModel model)
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
+            string userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.UniqueName).Value;
             var user = await userManager.FindByIdAsync(userId);
 
             string fullpath = await AddImageGetPath(model.Image);
@@ -96,7 +97,7 @@ namespace MyPet.Api.Controllers
 
         }
 
-        [HttpGet]
+        /*[HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> GetAllAdvertisements()
         {
@@ -105,13 +106,16 @@ namespace MyPet.Api.Controllers
             var result = mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
             
             return Ok(result);            
-        }
+        }*/
 
         [HttpGet]
         [AllowAnonymous]       
         public async Task<IActionResult> GetAdvertisementById([Required] int id)
         {
-            var ad = await adService.GetAdvertisementByIdAsync(id);
+            string userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.UniqueName)?.Value;
+
+            var ad = await adService.GetAdvertisementByIdAsync(id, userId);
+
             var result = mapper.Map<AdvertisementResponseModel>(ad);
            
             return Ok(result);                
@@ -131,8 +135,8 @@ namespace MyPet.Api.Controllers
         [HttpGet]        
         public async Task<IActionResult> GetAdsByUser()
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
-            
+            string userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.UniqueName).Value;
+
             var ads = await adService.GetAdsByUserAsync(userId);
             var result = mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
             
@@ -143,7 +147,7 @@ namespace MyPet.Api.Controllers
         [HttpGet]        
         public async Task<IActionResult> GetUsersAdsPagedList([FromQuery] AdPagedRequestParameters parameters)
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;            
+            string userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.UniqueName).Value;
 
             var ads = await adService.GetPagedAdsByUserAsync(userId, parameters.PageNumber, parameters.PageSize);
             var result = mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
@@ -155,7 +159,7 @@ namespace MyPet.Api.Controllers
         [HttpDelete]        
         public async Task<IActionResult> DeleteAdvertisement([Required] int id)
         {
-            string userId = User.Claims.FirstOrDefault(c => c.Type == "unique_name").Value;
+            string userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.UniqueName).Value;
             var deletedAd = await adService.DeleteAdvertisementAsync(id, userId);
 
             var responseModel = mapper.Map<AdvertisementResponseModel>(deletedAd);
@@ -165,10 +169,20 @@ namespace MyPet.Api.Controllers
 
         [HttpPost]
         [Authorize(Roles = "admin")]
-        public async Task<IActionResult> ApproveAdStatus ([Required] int id)
+        public async Task<IActionResult> ChangeAdStatus (ChangeAdStatusModel model)
         {
-            var ad = await adService.ApproveAdStatus(id);
+            var ad = await adService.ChangeAdStatus(model.AdId, model.Status);
             var result = mapper.Map<AdvertisementResponseModel>(ad);
+
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> GetAdsOnModeration()
+        {
+            var ads = await adService.GetAdsOnModerationAsync();
+            var result = mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
 
             return Ok(result);
         }
@@ -177,7 +191,7 @@ namespace MyPet.Api.Controllers
         [HttpPost]        
         public async Task<IActionResult> UpdateAdvertisement([FromForm] UpdatedAdvertisementModel model)
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;           
+            string userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.UniqueName).Value;           
 
             LocationDTO locDto = new LocationDTO
             {

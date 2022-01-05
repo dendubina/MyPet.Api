@@ -44,7 +44,7 @@ namespace MyPet.DAL.Repositories
 
         public IQueryable<TEntity> GetAll()
         {
-            return context.Set<TEntity>().AsNoTracking();
+            return context.Set<TEntity>();
         }
 
         public abstract Task<TEntity> Update(int id, TEntity entity);

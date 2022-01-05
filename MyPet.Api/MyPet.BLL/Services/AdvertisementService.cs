@@ -45,14 +45,7 @@ namespace MyPet.BLL.Services
 
         public async Task AddAdvertisementAsync(AdvertisementDTO model)
         {
-            string status;
-
-            if (isModerationEnabled)
-                status = AdStatuses.OnModeration;
-            else
-                status = AdStatuses.Approved;
-
-
+            
             Pet pet = mapper.Map<Pet>(model.Pet);           
             Advertisement ad = new Advertisement
             {
@@ -60,17 +53,21 @@ namespace MyPet.BLL.Services
                 UserName = model.UserName,
                 UserEmail = model.UserEmail,
                 Description = model.Description,
-                Category = model.Category,
-                Status = status,
+                Category = model.Category,               
                 PublicationDate = DateTime.Now,
                 Pet = pet,
                 Images = mapper.Map<List<ImageDTO>,List<Image>>(model.Images),
-            };            
+            };
 
-           await adRepo.AddAsync(ad);
+            if (isModerationEnabled)
+                ad.Status = AdStatuses.OnModeration;
+            else
+                ad.Status = AdStatuses.Approved;
+
+            await adRepo.AddAsync(ad);
         }        
 
-        public async Task<AdvertisementDTO> GetAdvertisementByIdAsync(int id)
+        public async Task<AdvertisementDTO> GetAdvertisementByIdAsync(int id, string userId)
         {
             var ad = await adRepo.GetByIdAsync(id);
 
@@ -79,6 +76,25 @@ namespace MyPet.BLL.Services
                 logger.LogWarning($"Attempt to get advertisement with id '{id}' that not found");
                 throw new NotFoundException($"Advertisement with id '{id}' was not found");
             }
+
+            if (isModerationEnabled)
+            {
+                if (ad.Status == AdStatuses.OnModeration || ad.Status == AdStatuses.Rejected)
+                {
+                    var user = await userManager.FindByIdAsync(userId);
+
+                    if(user != null && await userManager.IsInRoleAsync(user, "admin"))
+                    {
+                        return mapper.Map<AdvertisementDTO>(ad);
+                    }
+                    else
+                    {
+                        logger.LogWarning($"Attempt to get advertisement with id '{id}' having no permission");
+                        throw new ForbiddenAccessException("You don't have permission to get this advertisement");
+                    }
+                }
+            }
+
             return mapper.Map<AdvertisementDTO>(ad);
         }        
 
@@ -87,21 +103,21 @@ namespace MyPet.BLL.Services
             var adTodelete = await adRepo.GetByIdAsync(id);
             var user = await userManager.FindByIdAsync(userId);
 
-            if (user == null)
-            {
-                logger.LogWarning($"Unauthorized user with id '{userId}' was trying to delete ad with id '{id}'");
-                throw new UnauthorizedAccessException("Unauthorized access");
-            }            
-
             if (adTodelete == null)
             {
                 logger.LogWarning($"user with Id {userId} was trying to delete advertisement that was not found. Id: {id}");
                 throw new NotFoundException($"Advertisement with Id {id} was not found to delete");
             }
 
-            if (adTodelete.UserId != userId)
+            if (user == null)
             {
-                logger.LogWarning($"user with Id '{userId} was trying to update ad with id {id} having no permission to delete advertisement'");
+                logger.LogWarning($"Unauthorized user with id '{userId}' was trying to delete ad with id '{id}'");
+                throw new UnauthorizedAccessException("Unauthorized access");
+            }            
+
+            if (adTodelete.UserId != userId && !await userManager.IsInRoleAsync(user, "admin"))
+            {
+                logger.LogWarning($"user with Id '{userId} was trying to delete ad with id {id} having no permission to delete advertisement'");
                 throw new ForbiddenAccessException("You don't have permission to delete this advertisement");
             }
 
@@ -112,14 +128,13 @@ namespace MyPet.BLL.Services
         
         public async Task<IEnumerable<AdvertisementDTO>> GetFilteredPagedAdvertisementsAsync(int pageNumber, int pageSize, string region, string category, string locationTown)
         {
-            var ads = adRepo.GetPagedAds(pageNumber, pageSize).Where(x => x.Status != AdStatuses.Rejected);
+            var ads = adRepo.GetPagedAds(pageNumber, pageSize);
 
             if (isModerationEnabled)
             {
-                ads = ads
+                ads = ads                    
                     .Where(x => x.Status == AdStatuses.Approved);
             }
-
             if (!string.IsNullOrWhiteSpace(category))
             {
                 ads = ads
@@ -172,9 +187,9 @@ namespace MyPet.BLL.Services
                 throw new NotFoundException($"Advertisement with Id {model.Id} was not found");
             }           
             
-            if(adToUpdate.UserId != userId)
+            if(adToUpdate.UserId != userId && !await userManager.IsInRoleAsync(user, "admin"))
             {
-                logger.LogWarning($"user with Id '{userId} was trying to update ad with id {model.Id} having no permission to do that'");
+                logger.LogWarning($"user with Id '{userId} was trying to update ad with id {adToUpdate.Id} having no permission to do that'");
                 throw new ForbiddenAccessException("You don't have permission to update this advertisement");
             }
 
@@ -189,31 +204,50 @@ namespace MyPet.BLL.Services
                 Images = mapper.Map<List<ImageDTO>, List<Image>>(model.Images),
             };
 
+            if (isModerationEnabled)            
+                ad.Status = AdStatuses.OnModeration;
+            
+
             var result = await adRepo.Update(model.Id, ad);
 
             return mapper.Map<AdvertisementDTO>(result);
         }
 
-        public async Task<AdvertisementDTO> ApproveAdStatus(int id)
+        public async Task<AdvertisementDTO> ChangeAdStatus(int AdId, string status)
         {
-            var ad = await adRepo.GetByIdAsync(id);
-            
-            if(ad == null)
+            var ad = await adRepo.GetByIdAsync(AdId);
+
+            if (ad == null)
             {
-                logger.LogError($"Can't approve, Advertisement with id '{id}' was not found");
-                throw new NotFoundException($"Can't approve, Advertisement with id '{id}' was not found");
+                logger.LogError($"Can't change status, Advertisement with id '{AdId}' was not found");
+                throw new NotFoundException($"Can't change status, Advertisement with id '{AdId}' was not found");
             }
 
-            var result = await adRepo.ChangeStatus(id, AdStatuses.Approved);
-            logger.LogInformation($"Ad's status with id '{id} has been changed to '{AdStatuses.Approved}'");
+            if (status == AdStatuses.Approved || status == AdStatuses.Rejected || status == AdStatuses.OnModeration)
+            {
+                var result = await adRepo.ChangeStatus(AdId, status);
+                logger.LogInformation($"Ad's status with id '{AdId} has been changed to '{status}'");
+                return mapper.Map<AdvertisementDTO>(result);
+            }
 
-            return mapper.Map<AdvertisementDTO>(result);
+            throw new ValidationException("adStatus is invalid", new Dictionary<string, string[]> { { "adStatus", new string[] { "adStatus is invalid" } } });
+
+        }
+
+        public async Task<IEnumerable<AdvertisementDTO>> GetAdsOnModerationAsync()
+        {
+            var ads = await adRepo.GetAll()
+                .OrderByDescending(x => x.PublicationDate)
+                .Where(x => x.Status == AdStatuses.OnModeration)
+                .ToListAsync();
+
+            return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(ads);
         }
 
 
         public async Task<IEnumerable<AdvertisementDTO>> GetAllAdvertisementsAsync()
         {
-            var ads = await adRepo.GetAll()
+            var ads = await adRepo.GetAll()                
                 .OrderByDescending(x => x.PublicationDate)
                 .ToListAsync();
 

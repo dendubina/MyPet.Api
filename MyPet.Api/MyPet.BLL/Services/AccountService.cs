@@ -66,16 +66,17 @@ namespace MyPet.BLL.Services
                 };
             }
             else
-            {
-                List<string> errorsList = new List<string>();
-
+            {                            
+                List<string> errors = new List<string>();
                 foreach(var error in result.Errors)
                 {
-                    errorsList.Add(error.Description);
+                    errors.Add(error.Description);
                 }
 
-                _logger.LogWarning($"User with email '{username}' and UserName '{email}' has NOT been created. Reason: {result.Errors.FirstOrDefault()}");                
-                throw new UserCreatingException(errorsList.FirstOrDefault(), errorsList);
+                Dictionary<string, string[]> errorsDict = new Dictionary<string, string[]> { { "email, password, username", errors.ToArray() } };
+
+                _logger.LogWarning($"User with email '{username}' and UserName '{email}' has NOT been created. Reason: {result.Errors.FirstOrDefault()}");               
+                throw new ValidationException("invalid email or password", errorsDict);
             }
 
         }
@@ -83,19 +84,12 @@ namespace MyPet.BLL.Services
         public async Task<object> SignIn(string email, string password)
         {
             var user = userManager.Users.SingleOrDefault(x => x.Email.Equals(email));
-
-            if(user == null)            
-                throw new SignInException("wrong email or password", new List<string> { "wrong email or password" });
-            
-
             var result = await signInManager.PasswordSignInAsync(user.UserName, password, false, false);
 
-            if (result.Succeeded)
-            { 
-                return await GetTokenData(await GenerateJWTToken(user), user);
-            }
+            if (result.Succeeded)             
+                return await GetTokenData(await GenerateJWTToken(user), user);            
             else
-                throw new SignInException("wrong email or password", new List<string> {"wrong email or password"});
+                throw new ValidationException("wrong email or password", new Dictionary<string, string[]> { { "email or password", new string[] { "wrong email or password" } } });
         }
 
         public async Task<bool> ConfirmEmail(string userId, string emailToken)

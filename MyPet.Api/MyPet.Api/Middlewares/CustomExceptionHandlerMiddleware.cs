@@ -31,11 +31,7 @@ namespace MyPet.Api.Middlewares
             { 
                 switch (ex)
                 {
-                    case UserCreatingException e:
-                        await HandleExceptionAsync(context, e, HttpStatusCode.BadRequest, e.Errors);
-                        break;
-
-                    case SignInException e:
+                    case ValidationException e:
                         await HandleExceptionAsync(context, e, HttpStatusCode.BadRequest, e.Errors);
                         break;
 
@@ -61,14 +57,13 @@ namespace MyPet.Api.Middlewares
             }
         }
 
-        private async Task HandleExceptionAsync(HttpContext context, Exception exception, HttpStatusCode statusCode, IEnumerable<string> errors = null)
+        private async Task HandleExceptionAsync(HttpContext context, Exception exception, HttpStatusCode statusCode, Dictionary<string, string[]> errors = null)
         {
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)statusCode;
 
             var responseModel = new
-            {
-                Succeeded = false,
+            {                
                 Status = context.Response.StatusCode,                
                 Message = exception.Message,
                 Errors = errors,                
