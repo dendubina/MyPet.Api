@@ -50,11 +50,9 @@ namespace MyPet.BLL.Services
             if (result.Succeeded)
             {                
                 var createdUser = userManager.Users.SingleOrDefault(x => x.Email.Equals(email));
-
                 await userManager.AddToRoleAsync(createdUser, "user");
 
                 string code = await userManager.GenerateEmailConfirmationTokenAsync(createdUser);
-
                 bool emailSendingResult = await emailService.SendConfirmationEmail(emailConfig, createdUser.Email, createdUser.Id, code);
 
                 _logger.LogInformation($"User with email '{createdUser.Email}' and UserName '{createdUser.UserName}' has been created. Email has been send: {emailSendingResult}");
@@ -119,7 +117,7 @@ namespace MyPet.BLL.Services
             {
                 var handler = new JwtSecurityTokenHandler();
                 var token = handler.ReadJwtToken(jwttoken);
-                string userId = token.Claims.Where(x => x.Type == "unique_name").FirstOrDefault().Value;
+                string userId = token.Claims.Where(x => x.Type == JwtRegisteredClaimNames.UniqueName).FirstOrDefault().Value;
                 var user = await userManager.FindByIdAsync(userId);                               
 
                 return await GetTokenData(jwttoken, user);

@@ -29,17 +29,15 @@ namespace MyPet.Api.Controllers
         private readonly IAdvertisementService adService;
         private readonly IMapper mapper;
         private readonly IWebHostEnvironment webHostEnvironment;
-        private readonly IConfiguration config;
-        private readonly UserManager<IdentityUser> userManager;
+        private readonly IConfiguration config;      
 
-        public AdvertisementController(ILogger<AdvertisementController> logger, IAdvertisementService adService, IMapper mapper, IWebHostEnvironment env, IConfiguration config, UserManager<IdentityUser> userManager)
+        public AdvertisementController(ILogger<AdvertisementController> logger, IAdvertisementService adService, IMapper mapper, IWebHostEnvironment env, IConfiguration config)
         {
             _logger = logger;
             this.adService = adService;
             this.mapper = mapper;
             webHostEnvironment = env;
             this.config = config;
-            this.userManager = userManager;
         }
 
         [Authorize]
@@ -47,7 +45,6 @@ namespace MyPet.Api.Controllers
         public async Task<IActionResult> AddAdvertisement([FromForm] AdvertisementModel model)
         {
             string userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.UniqueName).Value;
-            var user = await userManager.FindByIdAsync(userId);
 
             string fullpath = await AddImageGetPath(model.Image);
            
@@ -58,9 +55,6 @@ namespace MyPet.Api.Controllers
             };
             AdvertisementDTO admodel = new AdvertisementDTO
             {
-                UserId = user.Id,
-                UserName = user.UserName,
-                UserEmail = user.Email,
                 Description = model.Description,
                 Category = model.Category,
                 Pet = petDto,
@@ -73,28 +67,10 @@ namespace MyPet.Api.Controllers
             });            
 
 
-            await adService.AddAdvertisementAsync(admodel);
+            var result = await adService.AddAdvertisementAsync(admodel, userId);
+            var responseModel = mapper.Map<AdvertisementResponseModel>(result);
 
-            var responseModel = new
-            {
-                UserId = user.Id,
-                UserName = user.UserName,
-                UserEmail = user.Email,
-                PublicationDate = DateTime.Now,
-                Description = model.Description,
-                Category = model.Category,
-                LocationRegion = model.LocationRegion,
-                LocationStreet = model.LocationStreet,
-                LocationTown = model.LocationTown,
-                LocationHouse = model.LocationHouse,
-                PetName = model.PetName,
-                ImagePath = fullpath,
-                ImageSize = model.Image.Length,
-                status = 201,
-            };
-
-            return new ObjectResult(responseModel) { StatusCode = StatusCodes.Status201Created };
-
+            return Ok(responseModel);
         }
 
         /*[HttpGet]
@@ -171,7 +147,7 @@ namespace MyPet.Api.Controllers
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> ChangeAdStatus (ChangeAdStatusModel model)
         {
-            var ad = await adService.ChangeAdStatus(model.AdId, model.Status);
+            var ad = await adService.ChangeAdStatusAsync(model.AdId, model.Status);
             var result = mapper.Map<AdvertisementResponseModel>(ad);
 
             return Ok(result);
@@ -226,9 +202,9 @@ namespace MyPet.Api.Controllers
 
             var updatedAd = await adService.UpdateAdvetrtisementAsync(newAd, userId);
 
-            var responseModel = mapper.Map<AdvertisementResponseModel>(updatedAd);            
+            var responseModel = mapper.Map<AdvertisementResponseModel>(updatedAd);
 
-            return new ObjectResult(responseModel) { StatusCode = StatusCodes.Status201Created };
+            return Ok(responseModel);
         }
         
 

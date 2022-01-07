@@ -9,16 +9,16 @@ namespace MyPet.Api.Models
     public class RegisterModel
     {
         [Required]
-        [EmailAddress(ErrorMessage = "Неверный email")]
+        [EmailAddress]
         public string Email { get; set; }
 
         [Required]
-        [MaxLength(10, ErrorMessage = "Максимальная длина - 10 символов")]
+        [MaxLength(10)]
         public string UserName { get; set; }
         [Required]
         public string Password { get; set; }
 
-        [Compare("Password", ErrorMessage = "Пароли не совпадают")]
+        [Compare("Password")]
         [Required]
         public string PasswordConfirm { get; set; }
     }

@@ -126,9 +126,7 @@ namespace MyPet.Api
                 options.Events = new JwtBearerEvents {
                     OnMessageReceived = context =>
                     {
-                        var accessToken = context.Request.Query["access_token"];                        
-
-                        
+                        var accessToken = context.Request.Query["access_token"];                       
                         var path = context.HttpContext.Request.Path.ToString();
 
                         // если запрос направлен хабу
@@ -151,7 +149,6 @@ namespace MyPet.Api
                 options.Password.RequireUppercase = false;
 
                 options.User.RequireUniqueEmail = true;
-
             });
 
             /*services.AddCors(options => options.AddDefaultPolicy(config => config

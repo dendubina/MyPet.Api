@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using MyPet.BLL.Constants;
 using MyPet.BLL.DTO;
 using MyPet.BLL.Exceptions;
 using MyPet.BLL.Interfaces;
@@ -22,16 +23,8 @@ namespace MyPet.BLL.Services
         private readonly IAdvertisementRepository adRepo;
         private readonly IMapper mapper;
         private readonly ILogger<AdvertisementService> logger;
-        private readonly UserManager<IdentityUser> userManager;
-        
-        private readonly bool isModerationEnabled;         
-
-        private struct AdStatuses
-        {
-            public const string OnModeration = "OnModeration";
-            public const string Rejected = "Rejected";
-            public const string Approved = "Approved";
-        }
+        private readonly UserManager<IdentityUser> userManager;        
+        private readonly bool isModerationEnabled;      
 
 
         public AdvertisementService(IAdvertisementRepository adRepo, IMapper mapper, IConfiguration config, ILogger<AdvertisementService> logger, UserManager<IdentityUser> userManager)
@@ -43,15 +36,23 @@ namespace MyPet.BLL.Services
             isModerationEnabled = bool.Parse(config["EnableAdsPreModeration"]);
         }
 
-        public async Task AddAdvertisementAsync(AdvertisementDTO model)
+        public async Task<AdvertisementDTO> AddAdvertisementAsync(AdvertisementDTO model, string userId)
         {
-            
+            var user = await userManager.FindByIdAsync(userId);
+
+            if(user == null)
+            {
+                logger.LogError($"user with id '{userId}' not found trying to add advertisement");
+                throw new UnauthorizedAccessException($"user with id '{userId} not found'");
+            }
+
+
             Pet pet = mapper.Map<Pet>(model.Pet);           
             Advertisement ad = new Advertisement
             {
-                UserId = model.UserId,
-                UserName = model.UserName,
-                UserEmail = model.UserEmail,
+                UserId = user.Id,
+                UserName = user.UserName,
+                UserEmail = user.Email,
                 Description = model.Description,
                 Category = model.Category,               
                 PublicationDate = DateTime.Now,
@@ -64,7 +65,9 @@ namespace MyPet.BLL.Services
             else
                 ad.Status = AdStatuses.Approved;
 
-            await adRepo.AddAsync(ad);
+            var result = await adRepo.AddAsync(ad);
+
+            return mapper.Map<AdvertisementDTO>(result);
         }        
 
         public async Task<AdvertisementDTO> GetAdvertisementByIdAsync(int id, string userId)
@@ -185,8 +188,7 @@ namespace MyPet.BLL.Services
             {
                 logger.LogWarning($"user with Id {model.Id} was trying to update advertisement that was not found. Id: {model.Id}");
                 throw new NotFoundException($"Advertisement with Id {model.Id} was not found");
-            }           
-            
+            }            
             if(adToUpdate.UserId != userId && !await userManager.IsInRoleAsync(user, "admin"))
             {
                 logger.LogWarning($"user with Id '{userId} was trying to update ad with id {adToUpdate.Id} having no permission to do that'");
@@ -213,7 +215,7 @@ namespace MyPet.BLL.Services
             return mapper.Map<AdvertisementDTO>(result);
         }
 
-        public async Task<AdvertisementDTO> ChangeAdStatus(int AdId, string status)
+        public async Task<AdvertisementDTO> ChangeAdStatusAsync(int AdId, string status)
         {
             var ad = await adRepo.GetByIdAsync(AdId);
 
