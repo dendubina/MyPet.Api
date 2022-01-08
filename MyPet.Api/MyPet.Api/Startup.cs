@@ -56,15 +56,10 @@ namespace MyPet.Api
             services.AddDbContext<AppDbContext>(options =>
             {
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
-            });
-
-            services.AddDbContext<UsersDbContext>(options =>
-            {
-                options.UseSqlServer(Configuration.GetConnectionString("IdentityConnection"));
-            });
+            });            
 
             services.AddIdentity<IdentityUser, IdentityRole>()
-                .AddEntityFrameworkStores<UsersDbContext>()
+                .AddEntityFrameworkStores<AppDbContext>()
                 .AddDefaultTokenProviders();
 
             services.AddControllers();
@@ -182,10 +177,13 @@ namespace MyPet.Api
         {
             if (env.IsDevelopment())
             {
-                app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MyPet.Api v1"));
+                app.UseDeveloperExceptionPage();                
             }
+
+           // context.Database.EnsureCreated();           
+
+            app.UseSwagger();
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MyPet.Api v1"));
 
             app.UseCors();
 

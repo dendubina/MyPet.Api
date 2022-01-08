@@ -73,7 +73,7 @@ namespace MyPet.BLL.Services
 
                 Dictionary<string, string[]> errorsDict = new Dictionary<string, string[]> { { "email, password, username", errors.ToArray() } };
 
-                _logger.LogWarning($"User with email '{username}' and UserName '{email}' has NOT been created. Reason: {result.Errors.FirstOrDefault()}");               
+                _logger.LogWarning($"User with email '{email}' and UserName '{username}' has NOT been created. Reason: {result.Errors.First().Description}");               
                 throw new ValidationException("invalid email or password", errorsDict);
             }
 

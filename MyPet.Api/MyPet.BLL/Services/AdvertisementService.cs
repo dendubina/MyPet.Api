@@ -67,6 +67,7 @@ namespace MyPet.BLL.Services
 
             var result = await adRepo.AddAsync(ad);
 
+            logger.LogInformation($"user with id '{result.UserId}' added advertisement with id '{result.Id}'");
             return mapper.Map<AdvertisementDTO>(result);
         }        
 
