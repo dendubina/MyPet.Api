@@ -28,17 +28,11 @@ namespace MyPet.BLL.Infrastructure
 
             CreateMap<Message, MessageResponseModel>().ReverseMap();
 
-            CreateMap<AddAdvertisementModel, Location>()
+            CreateMap<AdvertisementModel, Location>()
                 .ForMember(dest => dest.Region, opt => opt.MapFrom(src => src.LocationRegion))
                 .ForMember(dest => dest.Town, opt => opt.MapFrom(src => src.LocationTown))
                 .ForMember(dest => dest.Street, opt => opt.MapFrom(src => src.LocationStreet))
-                .ForMember(dest => dest.House, opt => opt.MapFrom(src => src.LocationHouse));
-
-            CreateMap<UpdateAdvertisementModel, Location>()
-                .ForMember(dest => dest.Region, opt => opt.MapFrom(src => src.LocationRegion))
-                .ForMember(dest => dest.Town, opt => opt.MapFrom(src => src.LocationTown))
-                .ForMember(dest => dest.Street, opt => opt.MapFrom(src => src.LocationStreet))
-                .ForMember(dest => dest.House, opt => opt.MapFrom(src => src.LocationHouse));
+                .ForMember(dest => dest.House, opt => opt.MapFrom(src => src.LocationHouse));            
         }
     }
 }

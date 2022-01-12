@@ -43,7 +43,7 @@ namespace MyPet.BLL.Services
             isModerationEnabled = bool.Parse(config["EnableAdsPreModeration"]);
         }
 
-        public async Task<AdvertisementDTO> AddAdvertisementAsync(AddAdvertisementModel model, string userId)
+        public async Task<AdvertisementDTO> AddAdvertisementAsync(AdvertisementModel model, string userId)
         {
             var user = await userManager.FindByIdAsync(userId);
 
@@ -200,7 +200,7 @@ namespace MyPet.BLL.Services
             return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(ads);
         }
 
-        public async Task<AdvertisementDTO> UpdateAdvetrtisementAsync(UpdateAdvertisementModel model, string userId)
+        public async Task<AdvertisementDTO> UpdateAdvetrtisementAsync(AdvertisementModel model, string userId)
         {
             var user = await userManager.FindByIdAsync(userId);
             var adToUpdate = await adRepo.GetByIdAsync(model.AdId);

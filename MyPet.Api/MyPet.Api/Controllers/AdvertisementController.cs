@@ -37,7 +37,7 @@ namespace MyPet.Api.Controllers
         {
             string userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.UniqueName).Value;
 
-            var result = await adService.AddAdvertisementAsync(mapper.Map<AddAdvertisementModel>(model), userId);
+            var result = await adService.AddAdvertisementAsync(model, userId);
             var responseModel = mapper.Map<AdvertisementResponseModel>(result);
 
             return Ok(responseModel);
@@ -135,11 +135,11 @@ namespace MyPet.Api.Controllers
 
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> UpdateAdvertisement([FromForm] UpdatedAdvertisementModel model)
+        public async Task<IActionResult> UpdateAdvertisement([FromForm] AdvertisementModel model)
         {
             string userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.UniqueName).Value;          
 
-            var updatedAd = await adService.UpdateAdvetrtisementAsync(mapper.Map<UpdateAdvertisementModel>(model), userId);
+            var updatedAd = await adService.UpdateAdvetrtisementAsync(model, userId);
 
             var responseModel = mapper.Map<AdvertisementResponseModel>(updatedAd);
 
