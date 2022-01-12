@@ -49,9 +49,9 @@ namespace MyPet.Api.Controllers
                 Text = message.Message,                
             };
 
-            var responseModel = await chatService.AddMessageToChat(messageDto, message.ToChatId);
+            var responseModel = await chatService.AddMessageToChat(messageDto);
 
-            List<string> usersToReceiveMessage = new List<string> {
+            string[] usersToReceiveMessage = {
                 message.ToUserId,
                 requestingUserId,
             };

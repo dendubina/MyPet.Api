@@ -29,19 +29,20 @@ namespace MyPet.BLL.Services
             this.logger = logger;
             this.userManager = userManager;
         }
-        public async Task<MessageResponseModel> AddMessageToChat(MessageDTO message, int? chatId)
+        public async Task<MessageResponseModel> AddMessageToChat(MessageDTO message)
         {
             var FromUser = await userManager.FindByIdAsync(message.FromUserId);
             var ToUser = await userManager.FindByIdAsync(message.ToUserId);
 
             message.isRead = false;
-            message.SendingDate = DateTime.Now;
+            message.SendingDate = DateTime.Now.AddHours(3);
             message.FromUserName = FromUser.UserName;
             message.ToUserName = ToUser.UserName;
 
             var messagetoAdd = mapper.Map<Message>(message);
-            await chatRepo.AddMessageToChat(messagetoAdd, chatId);            
+            await chatRepo.AddMessageToChat(messagetoAdd, null);
 
+            message.SendingDate = DateTime.Now;
             return mapper.Map<MessageResponseModel>(message);
         }
 

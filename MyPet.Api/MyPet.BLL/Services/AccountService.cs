@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using MyPet.BLL.DTO;
 using MyPet.BLL.Exceptions;
 using MyPet.BLL.Interfaces;
 using MyPet.BLL.Models.EmailModels;
@@ -59,7 +60,7 @@ namespace MyPet.BLL.Services
 
                 return new
                 {
-                    jwttoken = await GenerateJWTToken(createdUser),
+                    registrationResult = result.Succeeded,
                     isEmailSend = emailSendingResult,
                 };
             }
@@ -79,9 +80,13 @@ namespace MyPet.BLL.Services
 
         }
 
-        public async Task<object> SignIn(string email, string password)
+        public async Task<UserProfileDTO> SignIn(string email, string password)
         {
-            var user = userManager.Users.SingleOrDefault(x => x.Email.Equals(email));
+            var user = userManager.Users.FirstOrDefault(x => x.Email.Equals(email));
+
+            if(user == null)
+                throw new ValidationException("wrong email or password", new Dictionary<string, string[]> { { "email or password", new string[] { "wrong email or password" } } });
+
             var result = await signInManager.PasswordSignInAsync(user.UserName, password, false, false);
 
             if (result.Succeeded)             
@@ -111,7 +116,7 @@ namespace MyPet.BLL.Services
             }
         }
 
-        public async Task<object> CheckToken(string jwttoken)
+        public async Task<UserProfileDTO> CheckToken(string jwttoken)
         {
             try
             {
@@ -163,7 +168,7 @@ namespace MyPet.BLL.Services
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        private async Task<object> GetTokenData(string token, IdentityUser user)
+        private async Task<UserProfileDTO> GetTokenData(string token, IdentityUser user)
         {
             var userRoles = await userManager.GetRolesAsync(user);
             List<string> rolesList = new List<string>();
@@ -171,17 +176,17 @@ namespace MyPet.BLL.Services
             foreach (var role in userRoles)
             {
                 rolesList.Add(role);
-            }            
+            }           
 
-            return new
+            return new UserProfileDTO
             {
-                userId = user.Id,
-                userName = user.UserName,
-                email = user.Email,
-                isEmailConfirmed = user.EmailConfirmed,
-                tokenValidation = ValidateToken(token),
-                jwtToken = token,
-                roles = rolesList,
+                UserId = user.Id,
+                UserName = user.UserName,
+                Email = user.Email,
+                IsEmailConfirmed = user.EmailConfirmed,
+                TokenValidation = ValidateToken(token),
+                JwtToken = token,
+                Roles = rolesList,
             };
         }
 

@@ -8,12 +8,12 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MyPet.Api.Middlewares;
-using MyPet.Api.Models.EmailModels;
 using MyPet.Api.SignalRHub;
 using MyPet.BLL.Interfaces;
 using MyPet.BLL.Models.EmailModels;
@@ -24,6 +24,7 @@ using MyPet.DAL.Repositories;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -49,7 +50,7 @@ namespace MyPet.Api
             services.AddScoped<IAdvertisementRepository, AdvertisementRepository>();
 
             services.AddScoped<IChatRepository, ChatRepository>();
-            services.AddScoped<IChatService, ChatService>();
+            services.AddScoped<IChatService, ChatService>();           
 
             services.Configure<EmailConfig>(Configuration.GetSection("EmailConfiguration"));            
 
@@ -144,20 +145,16 @@ namespace MyPet.Api
                 options.Password.RequireUppercase = false;
 
                 options.User.RequireUniqueEmail = true;
-            });
 
-            /*services.AddCors(options => options.AddDefaultPolicy(config => config
-            .AllowAnyOrigin()
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            //.AllowCredentials()
-            ));*/
+                options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -._ @ +éöóêåíãøùçõúôûâàïðîëäæýÿ÷ñìèòüáþÉÖÓÊÅÍÃØÙÇÕÚÔÛÂÀÏÐÎËÄÆÝß×ÑÌÈÒÜÁÞ";
+            });
+            
             services.AddCors(options =>
             {
                 options.AddDefaultPolicy(p =>
                 {
                     p.AllowAnyHeader();
-                    p.WithOrigins("http://localhost:3000", "http://localhost:3001");
+                    p.WithOrigins("http://localhost:3000", "https://mypet.azurewebsites.net");
                     p.AllowAnyHeader();
                     p.AllowAnyMethod();
                     p.AllowCredentials();
@@ -178,9 +175,7 @@ namespace MyPet.Api
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();                
-            }
-
-           // context.Database.EnsureCreated();           
+            }                  
 
             app.UseSwagger();
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MyPet.Api v1"));

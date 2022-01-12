@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Http;
 using MyPet.Api.Validators;
 using System;
 using System.Collections.Generic;
@@ -8,25 +9,18 @@ using System.Threading.Tasks;
 
 namespace MyPet.Api.Models
 {
-    public class AdvertisementModel
+    public class AdvertisementModel // Validators/AdvertisementModelValidator
     {      
        
-        [Required]
-        public string PetName { get; set; }
-        [Required]
-        public string LocationRegion { get; set; }
-        [Required]
-        public string LocationTown { get; set; }
-        [Required]
-        public string LocationStreet { get; set; }
-        [Required]
-        public string LocationHouse { get; set; }
-        [Required]
-        public string Description { get; set; }
-        [Required]
+       
+        public string PetName { get; set; }       
+        public string LocationRegion { get; set; }        
+        public string LocationTown { get; set; }       
+        public string LocationStreet { get; set; }        
+        public string LocationHouse { get; set; }        
+        public string Description { get; set; }       
         public string Category { get; set; }
-
-        [Required]
+        
         [ImageExtensionAttribute(ErrorMessage = "Wrong file extension")]
         [MaxImageSizeMBAttribute(ErrorMessage ="Wrong image size")]
         public IFormFile Image { get; set; }

@@ -25,7 +25,7 @@ namespace MyPet.Api.Controllers
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {
             var result = await accountService.CreateUser(model.Email, model.UserName, model.Password);
-            return new ObjectResult(result) { StatusCode = StatusCodes.Status201Created };
+            return Ok(result);
         }
 
         [HttpPost]

@@ -1,22 +1,17 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MyPet.Api.Models;
 using MyPet.BLL.DTO;
 using MyPet.BLL.Interfaces;
-using System;
+using MyPet.BLL.Models.Ads;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace MyPet.Api.Controllers
@@ -27,47 +22,22 @@ namespace MyPet.Api.Controllers
     {
         private readonly ILogger<AdvertisementController> _logger;
         private readonly IAdvertisementService adService;
-        private readonly IMapper mapper;
-        private readonly IWebHostEnvironment webHostEnvironment;
-        private readonly IConfiguration config;      
+        private readonly IMapper mapper;        
 
         public AdvertisementController(ILogger<AdvertisementController> logger, IAdvertisementService adService, IMapper mapper, IWebHostEnvironment env, IConfiguration config)
         {
             _logger = logger;
             this.adService = adService;
-            this.mapper = mapper;
-            webHostEnvironment = env;
-            this.config = config;
+            this.mapper = mapper;            
         }
 
         [Authorize]
-        [HttpPut]        
+        [HttpPost]        
         public async Task<IActionResult> AddAdvertisement([FromForm] AdvertisementModel model)
         {
             string userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.UniqueName).Value;
 
-            string fullpath = await AddImageGetPath(model.Image);
-           
-            PetDTO petDto = new PetDTO
-            {
-                Name = model.PetName,
-                Location = mapper.Map<LocationDTO>(model)
-            };
-            AdvertisementDTO admodel = new AdvertisementDTO
-            {
-                Description = model.Description,
-                Category = model.Category,
-                Pet = petDto,
-                Images = new List<ImageDTO>(),
-            };
-            admodel.Images.Add(new ImageDTO
-            {
-                Size = model.Image.Length,
-                Path = fullpath,
-            });            
-
-
-            var result = await adService.AddAdvertisementAsync(admodel, userId);
+            var result = await adService.AddAdvertisementAsync(mapper.Map<AddAdvertisementModel>(model), userId);
             var responseModel = mapper.Map<AdvertisementResponseModel>(result);
 
             return Ok(responseModel);
@@ -164,68 +134,17 @@ namespace MyPet.Api.Controllers
         }
 
         [Authorize]
-        [HttpPost]        
+        [HttpPost]
         public async Task<IActionResult> UpdateAdvertisement([FromForm] UpdatedAdvertisementModel model)
         {
-            string userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.UniqueName).Value;           
+            string userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.UniqueName).Value;          
 
-            LocationDTO locDto = new LocationDTO
-            {
-                Region = model.LocationRegion,
-                Town = model.LocationTown,
-                Street = model.LocationStreet,
-                House = model.LocationHouse,
-            };
-            PetDTO petDto = new PetDTO
-            {
-                Name = model.PetName,
-                Location = locDto,
-            };
-            AdvertisementDTO newAd = new AdvertisementDTO
-            {   
-                Id = model.AdId,
-                Description = model.Description,
-                Category = model.Category,
-                Pet = petDto,               
-            };
-
-            if (model.Image != null)
-            {
-                newAd.Images = new List<ImageDTO>();
-                string pathToImg = await AddImageGetPath(model.Image);
-                newAd.Images.Add(new ImageDTO
-                {
-                    Path = pathToImg,
-                    Size = model.Image.Length,
-                });
-            }          
-
-            var updatedAd = await adService.UpdateAdvetrtisementAsync(newAd, userId);
+            var updatedAd = await adService.UpdateAdvetrtisementAsync(mapper.Map<UpdateAdvertisementModel>(model), userId);
 
             var responseModel = mapper.Map<AdvertisementResponseModel>(updatedAd);
 
             return Ok(responseModel);
         }
-        
 
-        private async Task<string> AddImageGetPath(IFormFile image)
-        {
-            string ImagesFolder = config["ImagesFolder"];
-            string folderToSave = webHostEnvironment.WebRootPath + ImagesFolder; 
-
-            string filename = Path.GetRandomFileName();
-
-            filename = Path.GetFileNameWithoutExtension(filename); 
-            filename = filename + Path.GetExtension(image.FileName);
-
-            string fullpath = Path.Combine(folderToSave, filename);
-
-            using (var stream = System.IO.File.Create(fullpath)) 
-            {                
-                await image.CopyToAsync(stream);
-            }
-
-            return ImagesFolder + filename; 
-        }
     }
 }

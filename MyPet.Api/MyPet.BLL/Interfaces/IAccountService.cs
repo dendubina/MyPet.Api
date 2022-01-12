@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MyPet.BLL.DTO;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,8 +10,8 @@ namespace MyPet.BLL.Interfaces
     public interface IAccountService
     {
         Task<object> CreateUser(string email, string username, string password);
-        Task<object> SignIn(string email, string password);
+        Task<UserProfileDTO> SignIn(string email, string password);
         Task<bool> ConfirmEmail(string userId, string emailToken);
-        Task<object> CheckToken(string jwttoken);
+        Task<UserProfileDTO> CheckToken(string jwttoken);
     }
 }

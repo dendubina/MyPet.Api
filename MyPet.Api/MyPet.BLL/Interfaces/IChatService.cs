@@ -11,7 +11,7 @@ namespace MyPet.BLL.Interfaces
     public interface IChatService
     {
         Task<IEnumerable<ChatResponseModel>> GetChatsByUserId(string userId);        
-        Task<MessageResponseModel> AddMessageToChat(MessageDTO message, int? chatId);
+        Task<MessageResponseModel> AddMessageToChat(MessageDTO message);
         Task<IEnumerable<MessageResponseModel>> GetChatMessagesById(int id);
     }
 }

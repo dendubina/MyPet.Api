@@ -8,23 +8,16 @@ using System.Threading.Tasks;
 
 namespace MyPet.Api.Models
 {
-    public class UpdatedAdvertisementModel
+    public class UpdatedAdvertisementModel // Validators/UpdatedAdvertisementModelValidator
     {
-        [Required]
-        public int AdId { get; set; }
-        [Required]
-        public string PetName { get; set; }
-        [Required]
-        public string LocationRegion { get; set; }
-        [Required]
-        public string LocationTown { get; set; }
-        [Required]
-        public string LocationStreet { get; set; }
-        [Required]
-        public string LocationHouse { get; set; }
-        [Required]
-        public string Description { get; set; }
-        [Required]
+        
+        public int AdId { get; set; }       
+        public string PetName { get; set; }        
+        public string LocationRegion { get; set; }       
+        public string LocationTown { get; set; }       
+        public string LocationStreet { get; set; }        
+        public string LocationHouse { get; set; }       
+        public string Description { get; set; }       
         public string Category { get; set; }
 
         [ImageExtensionAttribute(ErrorMessage = "Wrong file extension")]

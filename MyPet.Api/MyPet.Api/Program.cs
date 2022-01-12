@@ -18,7 +18,7 @@ namespace MyPet.Api
 {
     public class Program
     {
-        public static void Main(string[] args) // or async Task
+        public static async Task Main(string[] args) // or async Task
         {
             /*Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)

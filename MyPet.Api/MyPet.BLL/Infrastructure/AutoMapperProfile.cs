@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using MyPet.BLL.DTO;
+using MyPet.BLL.Models.Ads;
 using MyPet.BLL.Models.Chat;
 using MyPet.DAL.Entities;
 using MyPet.DAL.Entities.Chat;
@@ -20,12 +21,24 @@ namespace MyPet.BLL.Infrastructure
             CreateMap<Location, LocationDTO>().ReverseMap();
             CreateMap<Image, ImageDTO>().ReverseMap();
 
-
-
             CreateMap<Chat, ChatDTO>().ReverseMap();
             CreateMap<Message, MessageDTO>().ReverseMap();
             CreateMap<Message, MessageResponseModel>().ReverseMap();
             CreateMap<MessageDTO, MessageResponseModel>().ReverseMap();
+
+            CreateMap<Message, MessageResponseModel>().ReverseMap();
+
+            CreateMap<AddAdvertisementModel, Location>()
+                .ForMember(dest => dest.Region, opt => opt.MapFrom(src => src.LocationRegion))
+                .ForMember(dest => dest.Town, opt => opt.MapFrom(src => src.LocationTown))
+                .ForMember(dest => dest.Street, opt => opt.MapFrom(src => src.LocationStreet))
+                .ForMember(dest => dest.House, opt => opt.MapFrom(src => src.LocationHouse));
+
+            CreateMap<UpdateAdvertisementModel, Location>()
+                .ForMember(dest => dest.Region, opt => opt.MapFrom(src => src.LocationRegion))
+                .ForMember(dest => dest.Town, opt => opt.MapFrom(src => src.LocationTown))
+                .ForMember(dest => dest.Street, opt => opt.MapFrom(src => src.LocationStreet))
+                .ForMember(dest => dest.House, opt => opt.MapFrom(src => src.LocationHouse));
         }
     }
 }

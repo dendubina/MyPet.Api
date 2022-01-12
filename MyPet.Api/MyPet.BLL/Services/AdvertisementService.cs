@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -7,14 +9,15 @@ using MyPet.BLL.Constants;
 using MyPet.BLL.DTO;
 using MyPet.BLL.Exceptions;
 using MyPet.BLL.Interfaces;
+using MyPet.BLL.Models.Ads;
 using MyPet.DAL.Entities;
 using MyPet.DAL.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
 
 namespace MyPet.BLL.Services
 {
@@ -24,19 +27,23 @@ namespace MyPet.BLL.Services
         private readonly IMapper mapper;
         private readonly ILogger<AdvertisementService> logger;
         private readonly UserManager<IdentityUser> userManager;        
-        private readonly bool isModerationEnabled;      
+        private readonly bool isModerationEnabled;
+        private readonly IWebHostEnvironment webHostEnvironment;
+        private readonly IConfiguration config;
 
 
-        public AdvertisementService(IAdvertisementRepository adRepo, IMapper mapper, IConfiguration config, ILogger<AdvertisementService> logger, UserManager<IdentityUser> userManager)
+        public AdvertisementService(IAdvertisementRepository adRepo, IMapper mapper, IConfiguration config, ILogger<AdvertisementService> logger, UserManager<IdentityUser> userManager, IWebHostEnvironment env)
         {
             this.adRepo = adRepo;
             this.mapper = mapper;
             this.logger = logger;
             this.userManager = userManager;
+            this.config = config;
+            webHostEnvironment = env;
             isModerationEnabled = bool.Parse(config["EnableAdsPreModeration"]);
         }
 
-        public async Task<AdvertisementDTO> AddAdvertisementAsync(AdvertisementDTO model, string userId)
+        public async Task<AdvertisementDTO> AddAdvertisementAsync(AddAdvertisementModel model, string userId)
         {
             var user = await userManager.FindByIdAsync(userId);
 
@@ -46,26 +53,35 @@ namespace MyPet.BLL.Services
                 throw new UnauthorizedAccessException($"user with id '{userId} not found'");
             }
 
-
-            Pet pet = mapper.Map<Pet>(model.Pet);           
+            Pet pet = new Pet
+            {
+                Name = model.PetName,
+                Location = mapper.Map<Location>(model)
+            };
             Advertisement ad = new Advertisement
             {
                 UserId = user.Id,
                 UserName = user.UserName,
                 UserEmail = user.Email,
-                Description = model.Description,
-                Category = model.Category,               
                 PublicationDate = DateTime.Now,
+                Description = model.Description,
+                Category = model.Category,
                 Pet = pet,
-                Images = mapper.Map<List<ImageDTO>,List<Image>>(model.Images),
+                Images = new List<Image>(),
             };
+
+            ad.Images.Add(new Image
+            {
+                Size = model.Image.Length,
+                Path = await AddImageGetPath(model.Image),
+            });
 
             if (isModerationEnabled)
                 ad.Status = AdStatuses.OnModeration;
             else
-                ad.Status = AdStatuses.Approved;
+                ad.Status = AdStatuses.Approved;             
 
-            var result = await adRepo.AddAsync(ad);
+             var result = await adRepo.AddAsync(ad);
 
             logger.LogInformation($"user with id '{result.UserId}' added advertisement with id '{result.Id}'");
             return mapper.Map<AdvertisementDTO>(result);
@@ -125,7 +141,16 @@ namespace MyPet.BLL.Services
                 throw new ForbiddenAccessException("You don't have permission to delete this advertisement");
             }
 
+            var images = adTodelete.Images;
             var result = await adRepo.DeleteAsync(id);
+            if(result != null)
+            {
+                foreach(var img in images)
+                {
+                    DeleteAdsImage(img.Path);
+                }
+            }
+               
 
             return mapper.Map<AdvertisementDTO>(result);
         }
@@ -155,7 +180,7 @@ namespace MyPet.BLL.Services
                     .Where(x => x.Pet.Location.Region == region);                
             }            
 
-            var result = await ads.ToListAsync();
+            var result = await ads.ToArrayAsync();
             
 
             return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(result);           
@@ -175,20 +200,20 @@ namespace MyPet.BLL.Services
             return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(ads);
         }
 
-        public async Task<AdvertisementDTO> UpdateAdvetrtisementAsync(AdvertisementDTO model, string userId)
+        public async Task<AdvertisementDTO> UpdateAdvetrtisementAsync(UpdateAdvertisementModel model, string userId)
         {
             var user = await userManager.FindByIdAsync(userId);
-            var adToUpdate = await adRepo.GetByIdAsync(model.Id);
+            var adToUpdate = await adRepo.GetByIdAsync(model.AdId);
            
             if(user == null)
             {
-                logger.LogWarning($"Unauthorized user with id '{userId}' was trying to update ad with id '{model.Id}'");
+                logger.LogWarning($"Unauthorized user with id '{userId}' was trying to update ad with id '{model.AdId}'");
                 throw new UnauthorizedAccessException("Unauthorized access");
             }
             if (adToUpdate == null)
             {
-                logger.LogWarning($"user with Id {model.Id} was trying to update advertisement that was not found. Id: {model.Id}");
-                throw new NotFoundException($"Advertisement with Id {model.Id} was not found");
+                logger.LogWarning($"user with Id {model.AdId} was trying to update advertisement that was not found. Id: {model.AdId}");
+                throw new NotFoundException($"Advertisement with Id {model.AdId} was not found");
             }            
             if(adToUpdate.UserId != userId && !await userManager.IsInRoleAsync(user, "admin"))
             {
@@ -196,22 +221,40 @@ namespace MyPet.BLL.Services
                 throw new ForbiddenAccessException("You don't have permission to update this advertisement");
             }
 
-            Pet pet = mapper.Map<Pet>(model.Pet);
-
-            Advertisement ad = new Advertisement
-            {                                
-                Description = model.Description,
-                PublicationDate = DateTime.Now,
-                Pet = pet,
-                Category = model.Category,
-                Images = mapper.Map<List<ImageDTO>, List<Image>>(model.Images),
+            Pet pet = new Pet
+            {
+                Name = model.PetName,
+                Location = mapper.Map<Location>(model)
             };
 
-            if (isModerationEnabled)            
-                ad.Status = AdStatuses.OnModeration;
-            
+            Advertisement ad = new Advertisement
+            {                
+                Description = model.Description,
+                Category = model.Category,
+                PublicationDate = adToUpdate.PublicationDate,
+                Pet = pet,
+                Images = new List<Image>(),
+            };
 
-            var result = await adRepo.Update(model.Id, ad);
+            if(model.Image != null)
+            {
+                foreach(var img in adToUpdate.Images)
+                {
+                    DeleteAdsImage(img.Path);
+                }                
+
+                ad.Images.Add(new Image
+                {
+                    Size = model.Image.Length,
+                    Path = await AddImageGetPath(model.Image),
+                });
+            }            
+
+            if (isModerationEnabled)
+                ad.Status = AdStatuses.OnModeration;
+
+
+            var result = await adRepo.Update(model.AdId, ad);
 
             return mapper.Map<AdvertisementDTO>(result);
         }
@@ -242,9 +285,35 @@ namespace MyPet.BLL.Services
             var ads = await adRepo.GetAll()
                 .OrderByDescending(x => x.PublicationDate)
                 .Where(x => x.Status == AdStatuses.OnModeration)
-                .ToListAsync();
+                .ToArrayAsync();
 
             return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(ads);
+        }
+
+        private async Task<string> AddImageGetPath(IFormFile image)
+        {
+            string ImagesFolder = config["ImagesFolder"];
+            string folderToSave = webHostEnvironment.WebRootPath + ImagesFolder;
+
+            string filename = Path.GetRandomFileName();
+
+            filename = Path.GetFileNameWithoutExtension(filename);
+            filename = filename + Path.GetExtension(image.FileName);
+
+            string fullpath = Path.Combine(folderToSave, filename);
+
+            using (var stream = File.Create(fullpath))
+            {
+                await image.CopyToAsync(stream);
+            }
+
+            return ImagesFolder + filename;
+        }
+        private void DeleteAdsImage(string path)
+        {
+            string[] subs = path.Split("/");            
+            string pathToImg = webHostEnvironment.WebRootPath + config["ImagesFolder"] + subs[2];
+            File.Delete(pathToImg);
         }
 
 
