@@ -63,18 +63,7 @@ namespace MyPet.DAL.Repositories
             context.SaveChanges();
 
             return ad;
-        }
-
-        public IQueryable<Advertisement> GetPagedAds(int pageNumber, int pageSize)
-        {
-            return context.Advertisements
-                .Include(x => x.Images)
-                .Include(x => x.Pet).ThenInclude(x => x.Location)
-                .OrderByDescending(x => x.PublicationDate)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .AsNoTracking();                
-        }
+        }        
         
     }
 }

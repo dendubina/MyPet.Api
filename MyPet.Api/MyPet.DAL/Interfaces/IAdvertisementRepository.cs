@@ -10,7 +10,6 @@ namespace MyPet.DAL.Interfaces
     public interface IAdvertisementRepository : IBaseRepository<Advertisement>
     {        
         Task<IEnumerable<Advertisement>> GetPagedListByUserAsync(string userId, int pageNumber, int pageSize);
-        Task<Advertisement> ChangeStatus(int id, string status);
-        IQueryable<Advertisement> GetPagedAds(int pageNumber, int pageSize);        
+        Task<Advertisement> ChangeStatus(int id, string status);         
     }
 }

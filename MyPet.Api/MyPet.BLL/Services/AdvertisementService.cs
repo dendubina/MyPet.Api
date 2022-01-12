@@ -157,7 +157,9 @@ namespace MyPet.BLL.Services
         
         public async Task<IEnumerable<AdvertisementDTO>> GetFilteredPagedAdvertisementsAsync(int pageNumber, int pageSize, string region, string category, string locationTown)
         {
-            var ads = adRepo.GetPagedAds(pageNumber, pageSize);
+            //  var ads = adRepo.GetPagedAds(pageNumber, pageSize);
+
+            var ads = adRepo.GetAll();
 
             if (isModerationEnabled)
             {
@@ -178,9 +180,17 @@ namespace MyPet.BLL.Services
             {                
                 ads = ads                        
                     .Where(x => x.Pet.Location.Region == region);                
-            }            
+            }
+            
+            ads = ads
+                .Include(x => x.Images)
+                .Include(x => x.Pet).ThenInclude(x => x.Location)
+                .OrderByDescending(x => x.PublicationDate)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .AsNoTracking();
 
-            var result = await ads.ToArrayAsync();
+            var result = await ads.ToListAsync();
             
 
             return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(result);           

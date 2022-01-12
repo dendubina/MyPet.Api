@@ -42,17 +42,7 @@ namespace MyPet.Api.Controllers
 
             return Ok(responseModel);
         }
-
-        /*[HttpGet]
-        [AllowAnonymous]
-        public async Task<IActionResult> GetAllAdvertisements()
-        {
-            var ads = await adService.GetAllAdvertisementsAsync();
-
-            var result = mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
-            
-            return Ok(result);            
-        }*/
+       
 
         [HttpGet]
         [AllowAnonymous]       

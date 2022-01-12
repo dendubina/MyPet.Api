@@ -18,40 +18,13 @@ namespace MyPet.Api
 {
     public class Program
     {
-        public static async Task Main(string[] args) // or async Task
+        public static void Main(string[] args) // or async Task
         {
-            /*Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-                .Enrich.FromLogContext()
-                .WriteTo.Console()                
-                .CreateLogger();*/
-
-
             //configure logging first
             ConfigureLogging();
 
             //then create the host, so that if the host fails we can log errors
-            var host = CreateHostBuilder(args).Build();
-
-            /*using (var scope = host.Services.CreateScope())
-            {
-
-                var services = scope.ServiceProvider;
-
-                var logger = services.GetRequiredService<ILogger<Program>>();
-
-                try
-                {
-                    var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
-                    var rolesManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-                    await DbInitializer.InitializeDbAsync(userManager, rolesManager);
-                    logger.LogInformation("roles and admin account was successfully initialized");
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, "An error occurred while seeding the database.");
-                }
-            }*/
+            var host = CreateHostBuilder(args).Build();           
 
             host.Run();
         }
