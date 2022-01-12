@@ -76,18 +76,7 @@ namespace MyPet.Api.Controllers
             
             return Ok(result);            
         }
-
-        [Authorize]
-        [HttpGet]        
-        public async Task<IActionResult> GetAdsByUser()
-        {
-            string userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.UniqueName).Value;
-
-            var ads = await adService.GetAdsByUserAsync(userId);
-            var result = mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
-            
-            return Ok(result);           
-        }
+        
 
         [Authorize]
         [HttpGet]        

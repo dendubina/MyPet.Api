@@ -191,14 +191,7 @@ namespace MyPet.BLL.Services
             var ads = await adRepo.GetPagedListByUserAsync(userId, pageNumber, pageSize);
 
             return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(ads);
-        }
-
-        public async Task<IEnumerable<AdvertisementDTO>> GetAdsByUserAsync(string userId)
-        {
-            var ads = await adRepo.GetAdsByUserAsync(userId);
-
-            return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(ads);
-        }
+        }               
 
         public async Task<AdvertisementDTO> UpdateAdvetrtisementAsync(AdvertisementModel model, string userId)
         {
@@ -317,14 +310,14 @@ namespace MyPet.BLL.Services
         }
 
 
-        public async Task<IEnumerable<AdvertisementDTO>> GetAllAdvertisementsAsync()
+        /*public async Task<IEnumerable<AdvertisementDTO>> GetAllAdvertisementsAsync()
         {
             var ads = await adRepo.GetAll()                
                 .OrderByDescending(x => x.PublicationDate)
                 .ToListAsync();
 
             return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(ads);
-        }
+        }*/
         
     }
 }

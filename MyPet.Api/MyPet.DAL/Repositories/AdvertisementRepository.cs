@@ -16,29 +16,6 @@ namespace MyPet.DAL.Repositories
         public AdvertisementRepository(AppDbContext context) : base(context)
         {
             
-        }
-
-        public async Task<IEnumerable<Advertisement>> GetAdsByUserAsync(string userId)
-        {
-            return await context.Advertisements
-                .Where(x => x.UserId == userId)
-                .Include(x => x.Images)
-                .Include(x => x.Pet).ThenInclude(x => x.Location)
-                .OrderByDescending(x => x.PublicationDate)
-                .AsNoTracking()
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Advertisement>> GetPagedListAsync(int pageNumber, int pageSize, string category, string locationTown)
-        {
-            return await context.Advertisements
-                .Include(x => x.Images)
-                .Include(x => x.Pet).ThenInclude(x => x.Location)
-                .OrderByDescending(x => x.PublicationDate)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .AsNoTracking()
-                .ToListAsync();
         }       
 
         public async Task<IEnumerable<Advertisement>> GetPagedListByUserAsync(string userId, int pageNumber, int pageSize)

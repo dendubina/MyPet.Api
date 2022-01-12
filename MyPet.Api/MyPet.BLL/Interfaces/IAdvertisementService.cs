@@ -14,13 +14,12 @@ namespace MyPet.BLL.Interfaces
         Task<AdvertisementDTO> GetAdvertisementByIdAsync(int id, string userId);        
         Task<AdvertisementDTO> DeleteAdvertisementAsync(int id, string userId);
         Task<IEnumerable<AdvertisementDTO>> GetFilteredPagedAdvertisementsAsync(int pageNumber, int pageSize, string region, string category, string locationTown);
-        Task<IEnumerable<AdvertisementDTO>> GetPagedAdsByUserAsync(string userId, int pageNumber, int pageSize);
-        Task<IEnumerable<AdvertisementDTO>> GetAdsByUserAsync(string userId);
+        Task<IEnumerable<AdvertisementDTO>> GetPagedAdsByUserAsync(string userId, int pageNumber, int pageSize);        
         Task<AdvertisementDTO> UpdateAdvetrtisementAsync(AdvertisementModel model, string userId);
         Task<AdvertisementDTO> ChangeAdStatusAsync(int AdId, string status);
         Task<IEnumerable<AdvertisementDTO>> GetAdsOnModerationAsync();
 
 
-        Task<IEnumerable<AdvertisementDTO>> GetAllAdvertisementsAsync();
+      //  Task<IEnumerable<AdvertisementDTO>> GetAllAdvertisementsAsync();
     }
 }
