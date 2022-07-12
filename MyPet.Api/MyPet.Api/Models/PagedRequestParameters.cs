@@ -7,20 +7,15 @@ namespace MyPet.Api.Models
 {
     public class PagedRequestParameters
     {
-		private int _pageSize = 15;
-		const int maxPageSize = 50;
-		public int PageNumber { get; set; } = 1;
+        private const int MaxPageSize = 50;
+        private int pageSize = 15;
+
+        public int PageNumber { get; set; } = 1;
 
 		public int PageSize
 		{
-			get
-			{
-				return _pageSize;
-			}
-			set
-			{
-				_pageSize = (value > maxPageSize) ? maxPageSize : value;
-			}
-		}
+			get => pageSize;
+            set => pageSize = (value > MaxPageSize) ? MaxPageSize : value;
+        }
 	}
 }

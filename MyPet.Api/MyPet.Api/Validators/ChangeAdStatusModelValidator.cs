@@ -22,10 +22,7 @@ namespace MyPet.Api.Validators
         {
             string[] validStatuses = {"Approved", "Rejected", "OnModeration"};
 
-            if (validStatuses.Contains(status))
-                return true;
-            else
-                return false;
+            return validStatuses.Contains(status);
         }
     }
 }

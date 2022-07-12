@@ -14,31 +14,31 @@ namespace MyPet.Api.Controllers
     public class AccountController : ControllerBase
     {
         
-        private readonly IAccountService accountService;
+        private readonly IAccountService _accountService;
 
         public AccountController(IAccountService accountService)
         {            
-            this.accountService = accountService;
+            _accountService = accountService;
         }
 
         [HttpPost]
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {
-            var result = await accountService.CreateUser(model.Email, model.UserName, model.Password);
+            var result = await _accountService.CreateUser(model.Email, model.UserName, model.Password);
             return Ok(result);
         }
 
         [HttpPost]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {            
-            var result = await accountService.SignIn(model.Email, model.Password);
+            var result = await _accountService.SignIn(model.Email, model.Password);
             return Ok(result);
         }
 
-        [HttpGet]
+        [HttpPost]
         public async Task<IActionResult> ConfirmEmail([Required]string userId, [Required]string emailToken)
          {
-            var result = await accountService.ConfirmEmail(userId, emailToken);
+            var result = await _accountService.ConfirmEmail(userId, emailToken);
 
             return Ok(new
             {
@@ -48,10 +48,10 @@ namespace MyPet.Api.Controllers
 
         }
 
-        [HttpGet]
+        [HttpPost]
         public async Task<IActionResult> CheckToken([Required]string jwttoken)
         {
-            var result = await accountService.CheckToken(jwttoken);
+            var result = await _accountService.CheckToken(jwttoken);
             return Ok(result);
         }       
     }

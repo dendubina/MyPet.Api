@@ -69,7 +69,7 @@ namespace MyPet.Api.Middlewares
                 Errors = errors,                
             };
 
-            DefaultContractResolver contractResolver = new DefaultContractResolver // Newtonssoft setting for parameters names in camel case
+            var contractResolver = new DefaultContractResolver // Newtonssoft setting for parameters names in camel case
             {
                 NamingStrategy = new CamelCaseNamingStrategy()
             };

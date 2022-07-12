@@ -1,11 +1,9 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using MyPet.BLL.Models.Ads;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace MyPet.Api.Validators
 {
@@ -43,20 +41,14 @@ namespace MyPet.Api.Validators
         {
             string[] validRegions = { "Brest", "Gomel", "Minsk", "Grodno", "Mogilev", "Vitebsk" };
 
-            if (validRegions.Contains(region))
-                return true;
-            else
-                return false;
+            return validRegions.Contains(region);
         }
 
         private bool ValidCategories(string category)
         {
             string[] validCategories = { "Lost", "Found" };
 
-            if (validCategories.Contains(category))
-                return true;
-            else
-                return false;
+            return validCategories.Contains(category);
         }
 
         private bool ValidImageExtension(object value)
@@ -64,7 +56,7 @@ namespace MyPet.Api.Validators
             if (value == null)
                 return true;
 
-            Dictionary<string, List<byte[]>> fileSignatures = new Dictionary<string, List<byte[]>> {
+            var fileSignatures = new Dictionary<string, List<byte[]>> {
 
             {".png", new List<byte[]>
             {
@@ -92,19 +84,21 @@ namespace MyPet.Api.Validators
             var ext = Path.GetExtension(file.FileName).ToLower();
 
 
-            if (fileSignatures.ContainsKey(ext))
+            if (!fileSignatures.ContainsKey(ext))
             {
+                return false;
+            }
 
-                using (var reader = new BinaryReader(file.OpenReadStream()))
+            using (var reader = new BinaryReader(file.OpenReadStream()))
+            {
+                var signatures = fileSignatures[ext];
+
+                var headerBytes = reader.ReadBytes(signatures.Max(m => m.Length));
+
+                if (signatures.Any(signature => headerBytes.Take(signature.Length).SequenceEqual(signature)))
                 {
-                    var signatures = fileSignatures[ext];
-
-                    var headerBytes = reader.ReadBytes(signatures.Max(m => m.Length));
-
-                    if (signatures.Any(signature => headerBytes.Take(signature.Length).SequenceEqual(signature)))
-                        return true;
+                    return true;
                 }
-
             }
 
             return false;
@@ -113,15 +107,13 @@ namespace MyPet.Api.Validators
         private bool ValidImageSize(object value)
         {
             const double maxImageSize = 5;
-            var file = value as IFormFile;
 
-            if (file != null)
+            if (value is not IFormFile file)
             {
-                if (file.Length > 1048576 * maxImageSize)  // 1MB * maxImageSize        
-                    return false;
+                return true;
             }
 
-            return true;
+            return !(file.Length > 1048576 * maxImageSize);
         }
     }
 }

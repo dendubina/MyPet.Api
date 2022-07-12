@@ -13,32 +13,31 @@ using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Threading.Tasks;
+using MyPet.Api.Extensions;
 
 namespace MyPet.Api.Controllers
 {
-    [Route("[controller]/[action]")]
+    [Route("api/[controller]")]
     [ApiController]    
     public class AdvertisementController : ControllerBase
     {
-        private readonly ILogger<AdvertisementController> _logger;
-        private readonly IAdvertisementService adService;
-        private readonly IMapper mapper;        
+        private readonly IAdvertisementService _adService;
+        private readonly IMapper _mapper;        
 
-        public AdvertisementController(ILogger<AdvertisementController> logger, IAdvertisementService adService, IMapper mapper, IWebHostEnvironment env, IConfiguration config)
+        public AdvertisementController(IAdvertisementService adService, IMapper mapper)
         {
-            _logger = logger;
-            this.adService = adService;
-            this.mapper = mapper;            
+            _adService = adService;
+            _mapper = mapper;            
         }
 
         [Authorize]
         [HttpPost]        
         public async Task<IActionResult> AddAdvertisement([FromForm] AdvertisementModel model)
         {
-            string userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.UniqueName).Value;
-
-            var result = await adService.AddAdvertisementAsync(model, userId);
-            var responseModel = mapper.Map<AdvertisementResponseModel>(result);
+            string userId = Request.GetUserId();
+            
+            var result = await _adService.AddAdvertisementAsync(model, userId);
+            var responseModel = _mapper.Map<AdvertisementResponseModel>(result);
 
             return Ok(responseModel);
         }
@@ -48,11 +47,11 @@ namespace MyPet.Api.Controllers
         [AllowAnonymous]       
         public async Task<IActionResult> GetAdvertisementById([Required] int id)
         {
-            string userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.UniqueName)?.Value;
+            string userId = Request.GetUserId();
 
-            var ad = await adService.GetAdvertisementByIdAsync(id, userId);
+            var ad = await _adService.GetAdvertisementByIdAsync(id, userId);
 
-            var result = mapper.Map<AdvertisementResponseModel>(ad);
+            var result = _mapper.Map<AdvertisementResponseModel>(ad);
            
             return Ok(result);                
         }             
@@ -61,8 +60,8 @@ namespace MyPet.Api.Controllers
         [AllowAnonymous]       
         public async Task<IActionResult> GetAdsPagedList([FromQuery] AdPagedRequestParameters parameters)
         {
-            var ads = await adService.GetFilteredPagedAdvertisementsAsync(parameters.PageNumber, parameters.PageSize, parameters.LocationRegion, parameters.Category, parameters.LocationTown);
-            var result = mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
+            var ads = await _adService.GetFilteredPagedAdvertisementsAsync(parameters.PageNumber, parameters.PageSize, parameters.LocationRegion, parameters.Category, parameters.LocationTown);
+            var result = _mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
             
             return Ok(result);            
         }
@@ -72,10 +71,10 @@ namespace MyPet.Api.Controllers
         [HttpGet]        
         public async Task<IActionResult> GetUsersAdsPagedList([FromQuery] AdPagedRequestParameters parameters)
         {
-            string userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.UniqueName).Value;
+            string userId = Request.GetUserId();
 
-            var ads = await adService.GetPagedAdsByUserAsync(userId, parameters.PageNumber, parameters.PageSize);
-            var result = mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
+            var ads = await _adService.GetPagedAdsByUserAsync(userId, parameters.PageNumber, parameters.PageSize);
+            var result = _mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
             
             return Ok(result);            
         }
@@ -84,10 +83,10 @@ namespace MyPet.Api.Controllers
         [HttpDelete]        
         public async Task<IActionResult> DeleteAdvertisement([Required] int id)
         {
-            string userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.UniqueName).Value;
-            var deletedAd = await adService.DeleteAdvertisementAsync(id, userId);
+            string userId = Request.GetUserId();
+            var deletedAd = await _adService.DeleteAdvertisementAsync(id, userId);
 
-            var responseModel = mapper.Map<AdvertisementResponseModel>(deletedAd);
+            var responseModel = _mapper.Map<AdvertisementResponseModel>(deletedAd);
 
             return Ok(responseModel);
         }
@@ -96,8 +95,8 @@ namespace MyPet.Api.Controllers
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> ChangeAdStatus (ChangeAdStatusModel model)
         {
-            var ad = await adService.ChangeAdStatusAsync(model.AdId, model.Status);
-            var result = mapper.Map<AdvertisementResponseModel>(ad);
+            var ad = await _adService.ChangeAdStatusAsync(model.AdId, model.Status);
+            var result = _mapper.Map<AdvertisementResponseModel>(ad);
 
             return Ok(result);
         }
@@ -106,8 +105,8 @@ namespace MyPet.Api.Controllers
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> GetAdsOnModeration()
         {
-            var ads = await adService.GetAdsOnModerationAsync();
-            var result = mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
+            var ads = await _adService.GetAdsOnModerationAsync();
+            var result = _mapper.Map<IEnumerable<AdvertisementDTO>, IEnumerable<AdvertisementResponseModel>>(ads);
 
             return Ok(result);
         }
@@ -116,11 +115,11 @@ namespace MyPet.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> UpdateAdvertisement([FromForm] AdvertisementModel model)
         {
-            string userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.UniqueName).Value;          
+            string userId = Request.GetUserId();          
 
-            var updatedAd = await adService.UpdateAdvetrtisementAsync(model, userId);
+            var updatedAd = await _adService.UpdateAdvetrtisementAsync(model, userId);
 
-            var responseModel = mapper.Map<AdvertisementResponseModel>(updatedAd);
+            var responseModel = _mapper.Map<AdvertisementResponseModel>(updatedAd);
 
             return Ok(responseModel);
         }
