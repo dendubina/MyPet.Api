@@ -119,10 +119,8 @@ namespace MyPet.Api
                         var accessToken = context.Request.Query["access_token"];                       
                         var path = context.HttpContext.Request.Path.ToString();
 
-                        // åñëè çàïðîñ íàïðàâëåí õàáó
                         if (!string.IsNullOrWhiteSpace(accessToken) && (path.Contains("hubs/chat")))
                         {
-                            // ïîëó÷àåì òîêåí èç ñòðîêè çàïðîñà
                             context.Token = accessToken;
                         }
                         return Task.CompletedTask;
@@ -137,10 +135,7 @@ namespace MyPet.Api
                 options.Password.RequireLowercase = false;
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequireUppercase = false;
-
                 options.User.RequireUniqueEmail = true;
-
-                options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -._ @ +éöóêåíãøùçõúôûâàïðîëäæýÿ÷ñìèòüáþÉÖÓÊÅÍÃØÙÇÕÚÔÛÂÀÏÐÎËÄÆÝß×ÑÌÈÒÜÁÞ";
             });
             
             services.AddCors(options =>
