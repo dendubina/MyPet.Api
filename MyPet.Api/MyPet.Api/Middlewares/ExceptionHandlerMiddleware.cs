@@ -10,22 +10,22 @@ using System.Threading.Tasks;
 
 namespace MyPet.Api.Middlewares
 {
-    public class CustomExceptionHandlerMiddleware
+    public class ExceptionHandlerMiddleware
     {
-        private readonly RequestDelegate next;
-        private readonly ILogger<CustomExceptionHandlerMiddleware> logger;
+        private readonly RequestDelegate _next;
+        private readonly ILogger<ExceptionHandlerMiddleware> _logger;
 
-        public CustomExceptionHandlerMiddleware(RequestDelegate next, ILogger<CustomExceptionHandlerMiddleware> logger)
+        public ExceptionHandlerMiddleware(RequestDelegate next, ILogger<ExceptionHandlerMiddleware> logger)
         {
-            this.next = next;
-            this.logger = logger;
+            _next = next;
+            _logger = logger;
         }
 
         public async Task InvokeAsync(HttpContext context)
         {
             try
             {
-                await next(context);
+                await _next(context);
             }
             catch (Exception ex)
             { 
@@ -49,7 +49,7 @@ namespace MyPet.Api.Middlewares
 
 
                     default:
-                        logger.LogCritical($"Unhandled exception caught. Message: {ex.Message}, StackTrace: \r\n {ex.StackTrace}");
+                        _logger.LogCritical($"Unhandled exception caught. Message: {ex.Message}, StackTrace: \r\n {ex.StackTrace}");
                         await HandleExceptionAsync(context, ex, HttpStatusCode.InternalServerError);
                         break;
                 }

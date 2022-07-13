@@ -1,14 +1,13 @@
 ﻿using FluentValidation;
 using MyPet.Api.Models;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace MyPet.Api.Validators
 {
     public class ChangeAdStatusModelValidator : AbstractValidator<ChangeAdStatusModel>
     {
+        private readonly string[] _validStatuses = { "Approved", "Rejected", "OnModeration" };
+
         public ChangeAdStatusModelValidator()
         {
             RuleFor(x => x.AdId).NotNull().NotEqual(0);
@@ -18,11 +17,6 @@ namespace MyPet.Api.Validators
 
         }
 
-        private bool ValidStatuses(string status)
-        {
-            string[] validStatuses = {"Approved", "Rejected", "OnModeration"};
-
-            return validStatuses.Contains(status);
-        }
+        private bool ValidStatuses(string status) => _validStatuses.Contains(status);
     }
 }

@@ -1,8 +1,4 @@
-﻿using MyPet.Api.SignalRHub.Models;
-using MyPet.BLL.Models.Chat;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using MyPet.BLL.Models.Chat;
 using System.Threading.Tasks;
 
 namespace MyPet.Api.SignalRHub.Clients

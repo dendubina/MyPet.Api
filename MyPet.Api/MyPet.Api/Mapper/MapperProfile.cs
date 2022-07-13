@@ -1,11 +1,6 @@
 ﻿using AutoMapper;
 using MyPet.Api.Models;
 using MyPet.BLL.DTO;
-using MyPet.BLL.Models.Ads;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace MyPet.Api.Mapper
 {

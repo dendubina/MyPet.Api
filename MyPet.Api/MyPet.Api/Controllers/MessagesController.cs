@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using MyPet.Api.SignalRHub;
@@ -7,23 +6,20 @@ using MyPet.Api.SignalRHub.Clients;
 using MyPet.Api.SignalRHub.Models;
 using MyPet.BLL.DTO;
 using MyPet.BLL.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Threading.Tasks;
+using MyPet.Api.Extensions;
 
 namespace MyPet.Api.Controllers
 {
     [Route("[controller]/[action]")]
     [ApiController]
-    public class MessagesContoller : ControllerBase
+    public class MessagesController : ControllerBase
     {
 
         private readonly IHubContext<ChatHub, IChatClient> chatHub;
         private readonly IChatService chatService;
 
-        public MessagesContoller(IHubContext<ChatHub, IChatClient> chatHub, IChatService chatService)
+        public MessagesController(IHubContext<ChatHub, IChatClient> chatHub, IChatService chatService)
         {
             this.chatHub = chatHub;
             this.chatService = chatService;
@@ -34,7 +30,7 @@ namespace MyPet.Api.Controllers
         [Authorize]
         public async Task<IActionResult> SendMessage(ChatMessage message)
         {
-            var requestingUserId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.UniqueName).Value;
+            var requestingUserId = Request.GetUserId();
 
             if(message.ToUserId == requestingUserId)
             {
@@ -64,7 +60,7 @@ namespace MyPet.Api.Controllers
         [Authorize]
         public async Task<IActionResult> GetChatsByUser()
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.UniqueName).Value;
+            var userId = Request.GetUserId();
 
             var chats = await chatService.GetChatsByUserId(userId);
 

@@ -1,23 +1,18 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using MyPet.Api.Models;
 using MyPet.BLL.DTO;
 using MyPet.BLL.Interfaces;
 using MyPet.BLL.Models.Ads;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Threading.Tasks;
 using MyPet.Api.Extensions;
 
 namespace MyPet.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     [ApiController]    
     public class AdvertisementController : ControllerBase
     {
@@ -32,7 +27,7 @@ namespace MyPet.Api.Controllers
 
         [Authorize]
         [HttpPost]        
-        public async Task<IActionResult> AddAdvertisement([FromForm] AdvertisementModel model)
+        public async Task<IActionResult> Add([FromForm] AdvertisementModel model)
         {
             string userId = Request.GetUserId();
             
@@ -45,7 +40,7 @@ namespace MyPet.Api.Controllers
 
         [HttpGet]
         [AllowAnonymous]       
-        public async Task<IActionResult> GetAdvertisementById([Required] int id)
+        public async Task<IActionResult> GetById([Required] int id)
         {
             string userId = Request.GetUserId();
 

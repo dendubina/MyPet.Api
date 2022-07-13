@@ -9,6 +9,9 @@ namespace MyPet.Api.Validators
 {
     public class AdvertisementModelValidator : AbstractValidator<AdvertisementModel>
     {
+        private static readonly string[] _validRegions = { "Brest", "Gomel", "Minsk", "Grodno", "Mogilev", "Vitebsk" };
+        private static readonly string[] _validCategories = { "Lost", "Found" };
+
         public AdvertisementModelValidator()
         {
             RuleFor(model => model.Image).Must(ValidImageExtension).WithMessage("Wrong image extension");
@@ -37,19 +40,11 @@ namespace MyPet.Api.Validators
             RuleFor(model => model.Description).NotNull().NotEmpty().MaximumLength(300);
         }
 
-        private bool ValidRegions(string region)
-        {
-            string[] validRegions = { "Brest", "Gomel", "Minsk", "Grodno", "Mogilev", "Vitebsk" };
+        private bool ValidRegions(string region) => _validRegions.Contains(region);
 
-            return validRegions.Contains(region);
-        }
 
-        private bool ValidCategories(string category)
-        {
-            string[] validCategories = { "Lost", "Found" };
-
-            return validCategories.Contains(category);
-        }
+        private bool ValidCategories(string category) => _validCategories.Contains(category);
+        
 
         private bool ValidImageExtension(object value)
         {

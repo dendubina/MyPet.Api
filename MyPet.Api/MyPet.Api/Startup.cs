@@ -188,7 +188,7 @@ namespace MyPet.Api
             app.UseAuthentication();
             app.UseAuthorization();            
 
-            app.UseMiddleware<CustomExceptionHandlerMiddleware>();
+            app.UseMiddleware<ExceptionHandlerMiddleware>();
 
             app.UseEndpoints(endpoints =>
             {
