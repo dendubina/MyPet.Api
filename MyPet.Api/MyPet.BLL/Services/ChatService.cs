@@ -9,8 +9,6 @@ using MyPet.DAL.Entities.Chat;
 using MyPet.DAL.Interfaces;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MyPet.BLL.Services
@@ -31,18 +29,19 @@ namespace MyPet.BLL.Services
         }
         public async Task<MessageResponseModel> AddMessageToChat(MessageDTO message)
         {
-            var FromUser = await userManager.FindByIdAsync(message.FromUserId);
-            var ToUser = await userManager.FindByIdAsync(message.ToUserId);
+            var fromUser = await userManager.FindByIdAsync(message.FromUserId);
+            var toUser = await userManager.FindByIdAsync(message.ToUserId);
 
             message.isRead = false;
             message.SendingDate = DateTime.Now.AddHours(3);
-            message.FromUserName = FromUser.UserName;
-            message.ToUserName = ToUser.UserName;
+            message.FromUserName = fromUser.UserName;
+            message.ToUserName = toUser.UserName;
 
             var messagetoAdd = mapper.Map<Message>(message);
             await chatRepo.AddMessageToChat(messagetoAdd, null);
 
             message.SendingDate = DateTime.Now;
+
             return mapper.Map<MessageResponseModel>(message);
         }
 
@@ -61,7 +60,7 @@ namespace MyPet.BLL.Services
 
             foreach (var chat in chats)
             {
-                IdentityUser secondUser = new IdentityUser();
+                var secondUser = new IdentityUser();
 
                 if(chat.FirstUserId == requestingUser.Id)
                 {
@@ -83,7 +82,6 @@ namespace MyPet.BLL.Services
                     Id = chat.Id,
                     WithUserId = secondUser.Id,
                     WithUserName = secondUser.UserName,
-                  //  MessagesCount = chat.Messages.Count(),
                 });
             }
 

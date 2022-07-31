@@ -1,10 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MyPet.DAL.EF;
 using MyPet.DAL.Interfaces;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MyPet.DAL.Repositories
@@ -12,41 +9,41 @@ namespace MyPet.DAL.Repositories
     public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity>
         where TEntity : class
     {
-        protected readonly DbSet<TEntity> settedEntity;
-        protected readonly AppDbContext context;
+        protected readonly DbSet<TEntity> SettedEntity;
+        protected readonly AppDbContext DbContext;
 
-        public BaseRepository(AppDbContext context)
+        protected BaseRepository(AppDbContext context)
         {
-            this.context = context;
-            settedEntity = this.context.Set<TEntity>();
+            DbContext = context;
+            SettedEntity = this.DbContext.Set<TEntity>();
         }
 
         public async Task<TEntity> AddAsync(TEntity entity)
         {
-            await settedEntity.AddAsync(entity);
-            await context.SaveChangesAsync();
+            await SettedEntity.AddAsync(entity);
+            await DbContext.SaveChangesAsync();
 
             return entity;
         }
 
         public async Task<TEntity> DeleteAsync(int id)
         {
-            TEntity entity = await settedEntity.FindAsync(id);
+            var entity = await SettedEntity.FindAsync(id);
 
-            settedEntity.Remove(entity);
-            await context.SaveChangesAsync();
+            SettedEntity.Remove(entity);
+            await DbContext.SaveChangesAsync();
 
             return entity;
         }
 
         public async Task<TEntity> GetByIdAsync(int id)
         {            
-            return await settedEntity.FindAsync(id);
+            return await SettedEntity.FindAsync(id);
         }
 
         public IQueryable<TEntity> GetAll()
         {
-            return context.Set<TEntity>();
+            return DbContext.Set<TEntity>();
         }
 
         public abstract Task<TEntity> Update(int id, TEntity entity);

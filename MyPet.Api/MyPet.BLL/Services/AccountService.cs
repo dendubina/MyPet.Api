@@ -21,19 +21,19 @@ namespace MyPet.BLL.Services
     {
 
         private readonly ILogger<AccountService> _logger;
-        private readonly SignInManager<IdentityUser> signInManager;
-        private readonly UserManager<IdentityUser> userManager;        
-        private readonly IEmailService emailService;
-        private readonly IConfiguration config;
-        private readonly EmailConfig emailConfig;
+        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly UserManager<IdentityUser> _userManager;        
+        private readonly IEmailService _emailService;
+        private readonly IConfiguration _config;
+        private readonly EmailConfig _emailConfig;
 
         public AccountService(ILogger<AccountService> logger, SignInManager<IdentityUser> signInManager, UserManager<IdentityUser> userManager, IConfiguration config, IEmailService emailService, IOptions<EmailConfig> emailoptions)
         {
-            this.signInManager = signInManager;
-            this.userManager = userManager;            
-            this.emailService = emailService;            
-            this.config = config;
-            emailConfig = emailoptions.Value;
+            _signInManager = signInManager;
+            _userManager = userManager;
+            _emailService = emailService;
+            _config = config;
+            _emailConfig = emailoptions.Value;
             _logger = logger;
         }
 
@@ -46,15 +46,15 @@ namespace MyPet.BLL.Services
                 Email = email,
             };
             
-            var result = await userManager.CreateAsync(user, password);
+            var result = await _userManager.CreateAsync(user, password);
 
             if (result.Succeeded)
             {                
-                var createdUser = userManager.Users.SingleOrDefault(x => x.Email.Equals(email));
-                await userManager.AddToRoleAsync(createdUser, "user");
+                var createdUser = _userManager.Users.SingleOrDefault(x => x.Email.Equals(email));
+                await _userManager.AddToRoleAsync(createdUser, "user");
 
-                string code = await userManager.GenerateEmailConfirmationTokenAsync(createdUser);
-                bool emailSendingResult = await emailService.SendConfirmationEmail(emailConfig, createdUser.Email, createdUser.Id, code);
+                string code = await _userManager.GenerateEmailConfirmationTokenAsync(createdUser);
+                bool emailSendingResult = await _emailService.SendConfirmationEmail(_emailConfig, createdUser.Email, createdUser.Id, code);
 
                 _logger.LogInformation($"User with email '{createdUser.Email}' and UserName '{createdUser.UserName}' has been created. Email has been send: {emailSendingResult}");
 
@@ -64,56 +64,52 @@ namespace MyPet.BLL.Services
                     isEmailSend = emailSendingResult,
                 };
             }
-            else
-            {                            
-                List<string> errors = new List<string>();
-                foreach(var error in result.Errors)
-                {
-                    errors.Add(error.Description);
-                }
 
-                Dictionary<string, string[]> errorsDict = new Dictionary<string, string[]> { { "email, password, username", errors.ToArray() } };
+            var errorsDict = new Dictionary<string, string[]> { { "email, password, username", result.Errors.Select(error => error.Description).ToArray() } };
 
-                _logger.LogWarning($"User with email '{email}' and UserName '{username}' has NOT been created. Reason: {result.Errors.First().Description}");               
-                throw new ValidationException("invalid email or password", errorsDict);
-            }
+            _logger.LogWarning($"User with email '{email}' and UserName '{username}' has NOT been created. Reason: {result.Errors.First().Description}");
 
+            throw new ValidationException("invalid email or password", errorsDict);
         }
 
         public async Task<UserProfileDTO> SignIn(string email, string password)
         {
-            var user = userManager.Users.FirstOrDefault(x => x.Email.Equals(email));
+            var user = _userManager.Users.FirstOrDefault(x => x.Email.Equals(email));
 
-            if(user == null)
-                throw new ValidationException("wrong email or password", new Dictionary<string, string[]> { { "email or password", new string[] { "wrong email or password" } } });
+            if (user == null)
+            {
+                throw new ValidationException("wrong email or password", new Dictionary<string, string[]> { { "email or password", new [] { "wrong email or password" } } });
+            }
 
-            var result = await signInManager.PasswordSignInAsync(user.UserName, password, false, false);
+            var result = await _signInManager.PasswordSignInAsync(user.UserName, password, false, false);
 
-            if (result.Succeeded)             
-                return await GetTokenData(await GenerateJWTToken(user), user);            
-            else
-                throw new ValidationException("wrong email or password", new Dictionary<string, string[]> { { "email or password", new string[] { "wrong email or password" } } });
+            if (result.Succeeded)
+            {
+                return await GetTokenData(await GenerateJWTToken(user), user);
+            }
+
+            throw new ValidationException("wrong email or password", new Dictionary<string, string[]> { { "email or password", new [] { "wrong email or password" } } });
         }
 
         public async Task<bool> ConfirmEmail(string userId, string emailToken)
         {
-            var user = await userManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByIdAsync(userId);
 
             if(user != null)
             {
-                var result = await userManager.ConfirmEmailAsync(user, emailToken);
+                var result = await _userManager.ConfirmEmailAsync(user, emailToken);
 
                 if (result.Succeeded)
+                {
                     return true;
-                else
-                    _logger.LogError($"User with Id '{userId}' could not confirm his email");
-                    throw new Exception($"User with Id '{userId}' could not confirm his email");
+                }
+
+                _logger.LogError($"User with Id '{userId}' could not confirm his email");
+                throw new Exception($"User with Id '{userId}' could not confirm his email");
             }
-            else
-            {
-                _logger.LogError($"User with Id '{userId}' was not found confirming his email");
-                throw new UnauthorizedAccessException("User not found");                
-            }
+
+            _logger.LogError($"User with Id '{userId}' was not found confirming his email");
+            throw new UnauthorizedAccessException("User not found");
         }
 
         public async Task<UserProfileDTO> CheckToken(string jwttoken)
@@ -122,8 +118,8 @@ namespace MyPet.BLL.Services
             {
                 var handler = new JwtSecurityTokenHandler();
                 var token = handler.ReadJwtToken(jwttoken);
-                string userId = token.Claims.Where(x => x.Type == JwtRegisteredClaimNames.UniqueName).FirstOrDefault().Value;
-                var user = await userManager.FindByIdAsync(userId);                               
+                string userId = token.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.UniqueName)?.Value;
+                var user = await _userManager.FindByIdAsync(userId);                               
 
                 return await GetTokenData(jwttoken, user);
             }
@@ -135,48 +131,38 @@ namespace MyPet.BLL.Services
 
         private async Task<string> GenerateJWTToken(IdentityUser user)
         {
-            
             var claims = new List<Claim>()
             {
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),                
-                new Claim(JwtRegisteredClaimNames.UniqueName, user.Id),                
-                new Claim("username", user.UserName),
+                new(JwtRegisteredClaimNames.Email, user.Email),
+                new(JwtRegisteredClaimNames.UniqueName, user.Id),
+                new("username", user.UserName),
             };
 
-           var roles = await userManager.GetRolesAsync(user);
-            foreach(var role in roles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role));
-            }
-              
+            var roles = await _userManager.GetRolesAsync(user);
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["JwtKey"]));
+            claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JwtKey"]));
 
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-             var expires = DateTime.Now.AddDays(Convert.ToInt32(config["JwtExpireDays"]));            
-           // var expires = DateTime.Now.AddSeconds(30);
+            var expires = DateTime.Now.AddDays(Convert.ToInt32(_config["JwtExpireDays"]));
 
             var token = new JwtSecurityToken(
-                config["JwtIssuer"],
-                config["JwtIssuer"],
+                _config["JwtIssuer"],
+                _config["JwtIssuer"],
                 claims,
                 expires: expires,
                 signingCredentials: credentials
-                );
+            );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
         private async Task<UserProfileDTO> GetTokenData(string token, IdentityUser user)
         {
-            var userRoles = await userManager.GetRolesAsync(user);
-            List<string> rolesList = new List<string>();
-
-            foreach (var role in userRoles)
-            {
-                rolesList.Add(role);
-            }           
+            var userRoles = await _userManager.GetRolesAsync(user);
+            var rolesList = userRoles.ToList();
 
             return new UserProfileDTO
             {
@@ -193,9 +179,9 @@ namespace MyPet.BLL.Services
         private bool ValidateToken(string token)
         {
 
-            var mySecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["JwtKey"]));
-            var myIssuer = config["JwtIssuer"];
-            var myAudience = config["JwtIssuer"];
+            var mySecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JwtKey"]));
+            var myIssuer = _config["JwtIssuer"];
+            var myAudience = _config["JwtIssuer"];
 
             var tokenHandler = new JwtSecurityTokenHandler();
 
@@ -213,14 +199,14 @@ namespace MyPet.BLL.Services
                     ValidIssuer = myIssuer,
                     ValidAudience = myAudience,
                     IssuerSigningKey = mySecurityKey
-                }, out SecurityToken validatedToken);
+                }, out _);
             }
             catch
             {
                 return false;
             }
+
             return true;
-        }        
-        
+        }
     }
 }

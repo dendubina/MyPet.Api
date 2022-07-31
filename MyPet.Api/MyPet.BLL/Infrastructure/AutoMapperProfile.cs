@@ -4,11 +4,6 @@ using MyPet.BLL.Models.Ads;
 using MyPet.BLL.Models.Chat;
 using MyPet.DAL.Entities;
 using MyPet.DAL.Entities.Chat;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MyPet.BLL.Infrastructure
 {

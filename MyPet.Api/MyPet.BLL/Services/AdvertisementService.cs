@@ -16,7 +16,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MyPet.BLL.Services
@@ -53,12 +52,12 @@ namespace MyPet.BLL.Services
                 throw new UnauthorizedAccessException($"user with id '{userId} not found'");
             }
 
-            Pet pet = new Pet
+            var pet = new Pet
             {
                 Name = model.PetName,
                 Location = mapper.Map<Location>(model)
             };
-            Advertisement ad = new Advertisement
+            var ad = new Advertisement
             {
                 UserId = user.Id,
                 UserName = user.UserName,
@@ -76,12 +75,9 @@ namespace MyPet.BLL.Services
                 Path = await AddImageGetPath(model.Image),
             });
 
-            if (isModerationEnabled)
-                ad.Status = AdStatuses.OnModeration;
-            else
-                ad.Status = AdStatuses.Approved;             
+            ad.Status = isModerationEnabled ? AdStatuses.OnModeration : AdStatuses.Approved;             
 
-             var result = await adRepo.AddAsync(ad);
+            var result = await adRepo.AddAsync(ad);
 
             logger.LogInformation($"user with id '{result.UserId}' added advertisement with id '{result.Id}'");
             return mapper.Map<AdvertisementDTO>(result);
@@ -97,33 +93,33 @@ namespace MyPet.BLL.Services
                 throw new NotFoundException($"Advertisement with id '{id}' was not found");
             }
 
-            if (isModerationEnabled)
+            if (!isModerationEnabled)
             {
-                if (ad.Status == AdStatuses.OnModeration || ad.Status == AdStatuses.Rejected)
-                {
-                    var user = await userManager.FindByIdAsync(userId);
-
-                    if(user != null && await userManager.IsInRoleAsync(user, "admin"))
-                    {
-                        return mapper.Map<AdvertisementDTO>(ad);
-                    }
-                    else
-                    {
-                        logger.LogWarning($"Attempt to get advertisement with id '{id}' having no permission");
-                        throw new ForbiddenAccessException("You don't have permission to get this advertisement");
-                    }
-                }
+                return mapper.Map<AdvertisementDTO>(ad);
             }
 
-            return mapper.Map<AdvertisementDTO>(ad);
+            if (ad.Status != AdStatuses.OnModeration && ad.Status != AdStatuses.Rejected)
+            {
+                return mapper.Map<AdvertisementDTO>(ad);
+            }
+
+            var user = await userManager.FindByIdAsync(userId);
+
+            if (user != null && await userManager.IsInRoleAsync(user, "admin"))
+            {
+                return mapper.Map<AdvertisementDTO>(ad);
+            }
+
+            logger.LogWarning($"Attempt to get advertisement with id '{id}' having no permission");
+            throw new ForbiddenAccessException("You don't have permission to get this advertisement");
         }        
 
         public async Task<AdvertisementDTO> DeleteAdvertisementAsync(int id, string userId)
         {
-            var adTodelete = await adRepo.GetByIdAsync(id);
+            var adToDelete = await adRepo.GetByIdAsync(id);
             var user = await userManager.FindByIdAsync(userId);
 
-            if (adTodelete == null)
+            if (adToDelete == null)
             {
                 logger.LogWarning($"user with Id {userId} was trying to delete advertisement that was not found. Id: {id}");
                 throw new NotFoundException($"Advertisement with Id {id} was not found to delete");
@@ -135,14 +131,15 @@ namespace MyPet.BLL.Services
                 throw new UnauthorizedAccessException("Unauthorized access");
             }            
 
-            if (adTodelete.UserId != userId && !await userManager.IsInRoleAsync(user, "admin"))
+            if (adToDelete.UserId != userId && !await userManager.IsInRoleAsync(user, "admin"))
             {
                 logger.LogWarning($"user with Id '{userId} was trying to delete ad with id {id} having no permission to delete advertisement'");
                 throw new ForbiddenAccessException("You don't have permission to delete this advertisement");
             }
 
-            var images = adTodelete.Images;
+            var images = adToDelete.Images;
             var result = await adRepo.DeleteAsync(id);
+
             if(result != null)
             {
                 foreach(var img in images)
@@ -157,7 +154,6 @@ namespace MyPet.BLL.Services
         
         public async Task<IEnumerable<AdvertisementDTO>> GetFilteredPagedAdvertisementsAsync(int pageNumber, int pageSize, string region, string category, string locationTown)
         {
-            //  var ads = adRepo.GetPagedAds(pageNumber, pageSize);
 
             var ads = adRepo.GetAll();
 
@@ -191,7 +187,6 @@ namespace MyPet.BLL.Services
                 .AsNoTracking();
 
             var result = await ads.ToListAsync();
-            
 
             return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(result);           
         }
@@ -224,13 +219,13 @@ namespace MyPet.BLL.Services
                 throw new ForbiddenAccessException("You don't have permission to update this advertisement");
             }
 
-            Pet pet = new Pet
+            var pet = new Pet
             {
                 Name = model.PetName,
                 Location = mapper.Map<Location>(model)
             };
 
-            Advertisement ad = new Advertisement
+            var ad = new Advertisement
             {                
                 Description = model.Description,
                 Category = model.Category,
@@ -251,36 +246,36 @@ namespace MyPet.BLL.Services
                     Size = model.Image.Length,
                     Path = await AddImageGetPath(model.Image),
                 });
-            }            
+            }
 
             if (isModerationEnabled)
+            {
                 ad.Status = AdStatuses.OnModeration;
-
+            }
 
             var result = await adRepo.Update(model.AdId, ad);
 
             return mapper.Map<AdvertisementDTO>(result);
         }
 
-        public async Task<AdvertisementDTO> ChangeAdStatusAsync(int AdId, string status)
+        public async Task<AdvertisementDTO> ChangeAdStatusAsync(int adId, string status)
         {
-            var ad = await adRepo.GetByIdAsync(AdId);
+            var ad = await adRepo.GetByIdAsync(adId);
 
             if (ad == null)
             {
-                logger.LogError($"Can't change status, Advertisement with id '{AdId}' was not found");
-                throw new NotFoundException($"Can't change status, Advertisement with id '{AdId}' was not found");
+                logger.LogError($"Can't change status, Advertisement with id '{adId}' was not found");
+                throw new NotFoundException($"Can't change status, Advertisement with id '{adId}' was not found");
             }
 
             if (status == AdStatuses.Approved || status == AdStatuses.Rejected || status == AdStatuses.OnModeration)
             {
-                var result = await adRepo.ChangeStatus(AdId, status);
-                logger.LogInformation($"Ad's status with id '{AdId} has been changed to '{status}'");
+                var result = await adRepo.ChangeStatus(adId, status);
+                logger.LogInformation($"Ad's status with id '{adId} has been changed to '{status}'");
                 return mapper.Map<AdvertisementDTO>(result);
             }
 
-            throw new ValidationException("adStatus is invalid", new Dictionary<string, string[]> { { "adStatus", new string[] { "adStatus is invalid" } } });
-
+            throw new ValidationException("adStatus is invalid", new Dictionary<string, string[]> { { "adStatus", new [] { "adStatus is invalid" } } });
         }
 
         public async Task<IEnumerable<AdvertisementDTO>> GetAdsOnModerationAsync()
@@ -295,39 +290,29 @@ namespace MyPet.BLL.Services
 
         private async Task<string> AddImageGetPath(IFormFile image)
         {
-            string ImagesFolder = config["ImagesFolder"];
-            string folderToSave = webHostEnvironment.WebRootPath + ImagesFolder;
+            string imagesFolder = config["ImagesFolder"];
+            string folderToSave = webHostEnvironment.WebRootPath + imagesFolder;
 
             string filename = Path.GetRandomFileName();
 
             filename = Path.GetFileNameWithoutExtension(filename);
-            filename = filename + Path.GetExtension(image.FileName);
+            filename += Path.GetExtension(image.FileName);
 
             string fullpath = Path.Combine(folderToSave, filename);
 
-            using (var stream = File.Create(fullpath))
+            await using (var stream = File.Create(fullpath))
             {
                 await image.CopyToAsync(stream);
             }
 
-            return ImagesFolder + filename;
+            return imagesFolder + filename;
         }
+
         private void DeleteAdsImage(string path)
         {
             string[] subs = path.Split("/");            
             string pathToImg = webHostEnvironment.WebRootPath + config["ImagesFolder"] + subs[2];
             File.Delete(pathToImg);
         }
-
-
-        /*public async Task<IEnumerable<AdvertisementDTO>> GetAllAdvertisementsAsync()
-        {
-            var ads = await adRepo.GetAll()                
-                .OrderByDescending(x => x.PublicationDate)
-                .ToListAsync();
-
-            return mapper.Map<IEnumerable<Advertisement>, IEnumerable<AdvertisementDTO>>(ads);
-        }*/
-        
     }
 }

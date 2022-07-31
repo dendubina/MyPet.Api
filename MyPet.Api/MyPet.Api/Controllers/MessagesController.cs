@@ -16,13 +16,13 @@ namespace MyPet.Api.Controllers
     public class MessagesController : ControllerBase
     {
 
-        private readonly IHubContext<ChatHub, IChatClient> chatHub;
-        private readonly IChatService chatService;
+        private readonly IHubContext<ChatHub, IChatClient> _chatHub;
+        private readonly IChatService _chatService;
 
         public MessagesController(IHubContext<ChatHub, IChatClient> chatHub, IChatService chatService)
         {
-            this.chatHub = chatHub;
-            this.chatService = chatService;
+            _chatHub = chatHub;
+            _chatService = chatService;
         }
        
 
@@ -38,21 +38,21 @@ namespace MyPet.Api.Controllers
                 return ValidationProblem(ModelState);
             }
 
-            MessageDTO messageDto = new MessageDTO
+            var messageDto = new MessageDTO
             {
                 FromUserId = requestingUserId,
                 ToUserId = message.ToUserId,                
                 Text = message.Message,                
             };
 
-            var responseModel = await chatService.AddMessageToChat(messageDto);
+            var responseModel = await _chatService.AddMessageToChat(messageDto);
 
             string[] usersToReceiveMessage = {
                 message.ToUserId,
                 requestingUserId,
             };
 
-            await chatHub.Clients.Users(usersToReceiveMessage).ReceiveMessage(responseModel);
+            await _chatHub.Clients.Users(usersToReceiveMessage).ReceiveMessage(responseModel);
             return Ok(responseModel);
         }
 
@@ -62,7 +62,7 @@ namespace MyPet.Api.Controllers
         {
             var userId = Request.GetUserId();
 
-            var chats = await chatService.GetChatsByUserId(userId);
+            var chats = await _chatService.GetChatsByUserId(userId);
 
             return Ok(chats);
         }
@@ -71,7 +71,7 @@ namespace MyPet.Api.Controllers
         [Authorize]
         public async Task<IActionResult> GetChatMessagesById(int id)
         {
-            var messages = await chatService.GetChatMessagesById(id);
+            var messages = await _chatService.GetChatMessagesById(id);
 
             return Ok(messages);
         }

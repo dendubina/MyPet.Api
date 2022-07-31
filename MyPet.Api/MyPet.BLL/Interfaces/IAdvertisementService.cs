@@ -1,9 +1,6 @@
 ﻿using MyPet.BLL.DTO;
 using MyPet.BLL.Models.Ads;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MyPet.BLL.Interfaces
@@ -18,8 +15,5 @@ namespace MyPet.BLL.Interfaces
         Task<AdvertisementDTO> UpdateAdvetrtisementAsync(AdvertisementModel model, string userId);
         Task<AdvertisementDTO> ChangeAdStatusAsync(int AdId, string status);
         Task<IEnumerable<AdvertisementDTO>> GetAdsOnModerationAsync();
-
-
-      //  Task<IEnumerable<AdvertisementDTO>> GetAllAdvertisementsAsync();
     }
 }

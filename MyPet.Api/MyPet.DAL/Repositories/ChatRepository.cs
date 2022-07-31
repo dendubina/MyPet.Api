@@ -5,7 +5,6 @@ using MyPet.DAL.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MyPet.DAL.Repositories
@@ -19,7 +18,7 @@ namespace MyPet.DAL.Repositories
 
         public async Task<IEnumerable<Chat>> GetChatsByUserId(string userId)
         {
-            return await context.Chats
+            return await DbContext.Chats
                 .Where(x => x.FirstUserId == userId || x.SecondUserId == userId)               
                 .AsNoTracking()
                 .ToListAsync();
@@ -27,36 +26,37 @@ namespace MyPet.DAL.Repositories
 
         public async Task AddMessageToChat(Message message, int? chatId)
         {
-            
-           if(chatId != null)
+
+            if (chatId != null)
             {
-                var chat = await context.Chats.FindAsync(chatId);
+                var chat = await DbContext.Chats.FindAsync(chatId);
 
                 chat.Messages.Add(message);
-                await context.SaveChangesAsync();
+                await DbContext.SaveChangesAsync();
             }
             else
             {
-                var chat = await context.Chats
+                var chat = await DbContext.Chats
                     .Where(x => x.FirstUserId == message.FromUserId && x.SecondUserId == message.ToUserId
                            || x.FirstUserId == message.ToUserId && x.SecondUserId == message.FromUserId)
                     .FirstOrDefaultAsync();
+
                 if(chat != null)
                 {
                     chat.Messages.Add(message);
-                    await context.SaveChangesAsync();
+                    await DbContext.SaveChangesAsync();
                 }
                 else
                 {
-                    Chat newChat = new Chat
+                    var newChat = new Chat
                     {
                         FirstUserId = message.FromUserId,
                         SecondUserId = message.ToUserId,
                         Messages = new List<Message> { message },
                     };
 
-                   await context.Chats.AddAsync(newChat);
-                   await context.SaveChangesAsync();
+                   await DbContext.Chats.AddAsync(newChat);
+                   await DbContext.SaveChangesAsync();
                 }
             }
 
@@ -64,7 +64,7 @@ namespace MyPet.DAL.Repositories
 
         public async Task<IEnumerable<Message>> GetMessagesByChatId(int id)
         {
-            var chat = await context.Chats
+            var chat = await DbContext.Chats
                 .Where(x => x.Id == id)
                 .Include(x => x.Messages)
                 .AsNoTracking()
@@ -75,7 +75,7 @@ namespace MyPet.DAL.Repositories
 
         public override Task<Chat> Update(int id, Chat entity)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
     }
 }

@@ -35,8 +35,7 @@ namespace MyPet.Api.Controllers
             var responseModel = _mapper.Map<AdvertisementResponseModel>(result);
 
             return Ok(responseModel);
-        }
-       
+        }       
 
         [HttpGet]
         [AllowAnonymous]       
@@ -52,7 +51,7 @@ namespace MyPet.Api.Controllers
         }             
 
         [HttpGet]
-        [AllowAnonymous]       
+        [AllowAnonymous]    
         public async Task<IActionResult> GetAdsPagedList([FromQuery] AdPagedRequestParameters parameters)
         {
             var ads = await _adService.GetFilteredPagedAdvertisementsAsync(parameters.PageNumber, parameters.PageSize, parameters.LocationRegion, parameters.Category, parameters.LocationTown);
@@ -60,7 +59,6 @@ namespace MyPet.Api.Controllers
             
             return Ok(result);            
         }
-        
 
         [Authorize]
         [HttpGet]        
@@ -118,6 +116,5 @@ namespace MyPet.Api.Controllers
 
             return Ok(responseModel);
         }
-
     }
 }

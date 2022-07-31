@@ -47,13 +47,11 @@ namespace MyPet.Api.Middlewares
                         await HandleExceptionAsync(context, e, HttpStatusCode.Forbidden);
                         break;
 
-
                     default:
                         _logger.LogCritical($"Unhandled exception caught. Message: {ex.Message}, StackTrace: \r\n {ex.StackTrace}");
                         await HandleExceptionAsync(context, ex, HttpStatusCode.InternalServerError);
                         break;
                 }
-             
             }
         }
 
@@ -69,16 +67,13 @@ namespace MyPet.Api.Middlewares
                 Errors = errors,                
             };
 
-            var contractResolver = new DefaultContractResolver // Newtonssoft setting for parameters names in camel case
+            string result = JsonConvert.SerializeObject(responseModel, new JsonSerializerSettings
             {
-                NamingStrategy = new CamelCaseNamingStrategy()
-            };
+                Formatting = Formatting.Indented,
+                NullValueHandling = NullValueHandling.Ignore,
+                ContractResolver = new DefaultContractResolver {NamingStrategy = new CamelCaseNamingStrategy()}
+            });
 
-            string result = JsonConvert.SerializeObject(responseModel, new JsonSerializerSettings { 
-             Formatting = Formatting.Indented,
-             NullValueHandling = NullValueHandling.Ignore,
-             ContractResolver = contractResolver});
-            
             await context.Response.WriteAsync(result);
         }
     }

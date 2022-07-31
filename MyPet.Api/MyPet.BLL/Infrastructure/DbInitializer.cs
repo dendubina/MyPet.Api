@@ -1,8 +1,4 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MyPet.BLL.Infrastructure
@@ -26,8 +22,8 @@ namespace MyPet.BLL.Infrastructure
 
             if (await userManager.FindByNameAsync(adminEmail) == null)
             {
-                IdentityUser admin = new IdentityUser { Email = adminEmail, UserName = adminUserName };
-                IdentityResult result = await userManager.CreateAsync(admin, adminpassword);
+                var admin = new IdentityUser { Email = adminEmail, UserName = adminUserName };
+                var result = await userManager.CreateAsync(admin, adminpassword);
 
                 if (result.Succeeded)
                 {

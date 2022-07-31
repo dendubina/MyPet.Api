@@ -5,8 +5,6 @@ using MimeKit;
 using MyPet.BLL.Interfaces;
 using MyPet.BLL.Models.EmailModels;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -57,12 +55,13 @@ namespace MyPet.BLL.Services
                     await client.SendAsync(message);
                     await client.DisconnectAsync(true);
                 }
+
                 logger.LogInformation($"email confirmation has been send to user with id '{userId}'. Email address: {to}");
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError($"Exception catched while sending confirmation email to user with id '{userId}'. Email adress: {to}. Exception message: {ex.Message}. StackTrace: \r\n {ex.StackTrace}");
+                logger.LogError($"Exception catched while sending confirmation email to user with id '{userId}'. Email address: {to}. Exception message: {ex.Message}. StackTrace: \r\n {ex.StackTrace}");
                 return false;
             }
         }

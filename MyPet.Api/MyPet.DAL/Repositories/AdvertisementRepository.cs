@@ -2,10 +2,8 @@
 using MyPet.DAL.EF;
 using MyPet.DAL.Entities;
 using MyPet.DAL.Interfaces;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MyPet.DAL.Repositories
@@ -20,7 +18,7 @@ namespace MyPet.DAL.Repositories
 
         public async Task<IEnumerable<Advertisement>> GetPagedListByUserAsync(string userId, int pageNumber, int pageSize)
         {
-            return await context.Advertisements
+            return await DbContext.Advertisements
                 .Where(x => x.UserId == userId)
                 .Include(x => x.Images)
                 .Include(x => x.Pet).ThenInclude(x => x.Location)
@@ -33,9 +31,9 @@ namespace MyPet.DAL.Repositories
 
         public override async Task<Advertisement> Update(int id, Advertisement entity)
         {
-            var ad = await context.Advertisements.FindAsync(id);
+            var ad = await DbContext.Advertisements.FindAsync(id);
 
-            if(entity.Images.Count() > 0)
+            if(entity.Images.Any())
             {
                 ad.Images.Clear();
                 ad.Images = entity.Images;
@@ -51,19 +49,18 @@ namespace MyPet.DAL.Repositories
             ad.Pet.Location.House = entity.Pet.Location.House;
             ad.Pet.Location.Region = entity.Pet.Location.Region;            
 
-            await context.SaveChangesAsync();
+            await DbContext.SaveChangesAsync();
             return ad;
         }
 
         public async Task<Advertisement> ChangeStatus(int id, string status)
         {
-            var ad = await context.Advertisements.FindAsync(id);
+            var ad = await DbContext.Advertisements.FindAsync(id);
 
             ad.Status = status;
-            context.SaveChanges();
+            await DbContext.SaveChangesAsync();
 
             return ad;
-        }        
-        
+        }
     }
 }

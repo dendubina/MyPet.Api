@@ -21,8 +21,7 @@ namespace MyPet.DAL.EF
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
-
-           // Database.EnsureCreated();
+           
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -45,14 +44,10 @@ namespace MyPet.DAL.EF
                 .WithOne(p => p.Advertisement)
                 .HasForeignKey<Pet>(p => p.AdId);
 
-
             modelBuilder.Entity<Chat>()
                 .HasMany(x => x.Messages)
                 .WithOne(x => x.Chat)
                 .HasForeignKey(x => x.ChatId);
-
-
-
 
             base.OnModelCreating(modelBuilder);
         }

@@ -1,13 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MyPet.BLL.Models.Ads
 {
-    public class AdvertisementModel //Api/Validators/AdvertisementModelValidator
+    public class AdvertisementModel
     {
         public int AdId { get; set; }
         public string PetName { get; set; }       

@@ -42,7 +42,6 @@ namespace MyPet.Api.Controllers
                 status = 200,
                 confirmationResult = result,
             });
-
         }
 
         [HttpPost]
